@@ -27,6 +27,7 @@ def log(message, logresult):
     #determine some values
     timestamp = message.timestamp.strftime("%Y-%m-%d %H:%M:%S")
     username = message.author.name
+    discr = message.author.discriminator
     if message.server is not None:
         servername = message.server.name
     else:
@@ -46,7 +47,7 @@ def log(message, logresult):
     
     #formatted log file
     file = open(settings.formattedlogfile, "a", encoding="utf8")
-    file.write(settings.logformat.replace("%t", timestamp).replace("%s", servername).replace("%c", channelname).replace("%u", username).replace("%m", logmessage).replace("%r", logresult) + "\n")
+    file.write(settings.logformat.replace("%t", timestamp).replace("%s", servername).replace("%c", channelname).replace("%u", username).replace("%U", "{}#{}".format(username, discr)).replace("%m", logmessage).replace("%r", logresult) + "\n")
     file.close()
     
     return

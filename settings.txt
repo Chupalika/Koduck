@@ -1,6 +1,7 @@
 botname = Koduck
 token = 
 masteradmin = 
+logformat = %t	%U	%m	%r
 
 message_sendmessage_noparam = I need two parameters: channelid and message
 message_changeusername_noparam = I need a name!
