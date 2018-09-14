@@ -1,0 +1,25 @@
+botname = Koduck
+token = 
+masteradmin = 
+
+message_sendmessage_noparam = I need two parameters: channelid and message
+message_changeusername_noparam = I need a name!
+message_nomentioneduser = I need exactly one mentioned user!
+message_nomentioneduser2 = I need exactly zero or one mentioned user!
+message_addadmin_success = <@!{}> is now a {} admin!
+message_addadmin_failed = That user is already a {} admin
+message_removeadmin_success = <@!{}> is no longer a {} admin
+message_removeadmin_failed = That user is not a {} admin
+message_restrict_success = <@!{}> is now restricted from using {} commands
+message_restrict_failed = That user is already restricted
+message_restrict_failed2 = {} admins cannot be restricted
+message_unrestrict_success = <@!{}> is now unrestricted from using {} commands
+message_unrestrict_failed = That user is not restricted
+message_oops_success = Deleted last output from this user
+message_oops_failed = No last output from this user to delete
+message_help = Hi, I'm a cool bot that does nothing! Try running the commands command for a list of available commands. If you give me one of those commands as a parameter for this help command you just ran, I'll tell you what it does and how to use it.
+message_help_oops = Deletes the bot message from the user's last valid command
+message_help_commands = Provides the list of commands available for the user to run
+message_help_help = wtf
+message_help_userinfo = Shows some info on the mentioned user (or yourself if there is no mentioned user)
+message_help_unknowncommand = I don't know this command
