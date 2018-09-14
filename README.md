@@ -1,6 +1,6 @@
 # Koduck
 
-## Overview
+## Introduction
 Koduck is a very basic Discord bot framework written in Python! Originally, I'd developed a bot named [KoduckBot](https://github.com/Chupalika/KoduckBot) that provides info from a game. After some time it occurred to me that I might want to create a similar bot for other games. The only differences would be the functions that collected and outputted game data. And also my code was a bit messy... So I got the idea to create a general bot with basic functions - this would be the base template - then add functions as needed. I tried to design it to be easy to learn and use!
 
 ## Features
