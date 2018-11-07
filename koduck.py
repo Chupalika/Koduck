@@ -58,30 +58,32 @@ def log(message, logresult):
 #- sendcontent: the String to include in the outgoing Discord Message
 #- sendembed: the Discord Embed to attach to the outgoing Discord Message
 async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembed=None):
-    if sendchannel is None:
-        sendchannel = receivemessage.channel
-    
+    if receivemessage is not None:
+        if sendchannel is None:
+            sendchannel = receivemessage.channel
+        
     #calculate time since the last bot output on this channel
     global lastmessageDT
     try:
-        TD = datetime.datetime.now() - lastmessageDT[receivemessage.channel.id]
+        TD = datetime.datetime.now() - lastmessageDT[sendchannel.id]
         cooldownactive = ((TD.microseconds / 1000) + (TD.seconds * 1000) < settings.channelcooldown)
     except KeyError:
         cooldownactive = False
     
-    #calculate time since the last bot output from the user
-    try:
-        TD = datetime.datetime.now() - userlastoutput[receivemessage.author.id].timestamp
-        userlevel = userlevels[receivemessage.author.id]
-        usercooldown = 0
-        while usercooldown == 0 and userlevel >= 0:
-            try:
-                usercooldown = getattr(settings, "usercooldown_{}".format(userlevel))
-            except AttributeError:
-                userlevel -= 1
-        cooldownactive = ((TD.microseconds / 1000) + (TD.seconds * 1000) < usercooldown) or cooldownactive
-    except KeyError:
-        okay = "okay"
+    if receivemessage is not None:
+        #calculate time since the last bot output from the user
+        try:
+            TD = datetime.datetime.now() - userlastoutput[receivemessage.author.id].timestamp
+            userlevel = userlevels[receivemessage.author.id]
+            usercooldown = 0
+            while usercooldown == 0 and userlevel >= 0:
+                try:
+                    usercooldown = getattr(settings, "usercooldown_{}".format(userlevel))
+                except AttributeError:
+                    userlevel -= 1
+            cooldownactive = ((TD.microseconds / 1000) + (TD.seconds * 1000) < usercooldown) or cooldownactive
+        except KeyError:
+            okay = "okay"
     
     #ignore message if bot is on channel cooldown or user cooldown
     if cooldownactive:
@@ -93,13 +95,14 @@ async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembe
     
     #send the message and track some data
     THEmessage = await client.send_message(sendchannel, sendcontent, embed=sendembed)
-    userlastoutput[receivemessage.author.id] = THEmessage
-    lastmessageDT[receivemessage.channel.id] = datetime.datetime.now()
+    if receivemessage is not None:
+        userlastoutput[receivemessage.author.id] = THEmessage
+    lastmessageDT[sendchannel.id] = datetime.datetime.now()
     
     try:
-        botoutputs[receivemessage.channel].append(THEmessage)
+        botoutputs[sendchannel].append(THEmessage)
     except KeyError:
-        botoutputs[receivemessage.channel] = [THEmessage]
+        botoutputs[sendchannel] = [THEmessage]
     
     return THEmessage
 
@@ -114,7 +117,10 @@ def addcommand(command, function, tier):
 def updateuserlevels():
     userlevels.clear()
     userlevels[settings.masteradmin] = 9
-    file = open(settings.userlevelsfile)
+    try:
+        file = open(settings.userlevelsfile)
+    except FileNotFoundError:
+        return
     filecontents = file.read()
     for line in filecontents.split("\n"):
         if line == "":
@@ -195,6 +201,11 @@ def updatesettings():
     file.close()
     settings.masteradmin = str(settings.masteradmin)
 
+#Run a command as if it was triggered by a Discord message
+async def runcommand(command, message=None, params=[]):
+    function = commands[command][0]
+    result = await function(message, params)
+
 #######
 #SETUP#
 #######
@@ -208,7 +219,7 @@ async def backgroundtask():
         if client.user.name != settings.botname:
             await client.edit_profile(username=settings.botname)
         try:
-            settings.backgroundtask()
+            await settings.backgroundtask()
         except TypeError:
             okay = "okay"
         await asyncio.sleep(settings.backgroundtaskinterval)

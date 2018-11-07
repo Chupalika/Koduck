@@ -23,4 +23,4 @@ message_help_oops = Deletes the bot message from the user's last valid command
 message_help_commands = Provides the list of commands available for the user to run
 message_help_help = wtf
 message_help_userinfo = Shows some info on the mentioned user (or yourself if there is no mentioned user)
-message_help_unknowncommand = I don't know this command
+message_help_unknowncommand = I don't know this command or there is no help message for this command
