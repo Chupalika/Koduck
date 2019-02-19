@@ -1,16 +1,23 @@
+#BOT SETTINGS
 botname = Koduck
 token = 
 masteradmin = 
-logformat = %t	%U	%m	%r
+logformat = %t\t%s\t%c\t%U\t%m\t%r
 
+#MESSAGES
 message_sendmessage_noparam = I need two parameters: channelid and message
-message_changeusername_noparam = I need a name!
+message_updatesetting_noparam = I need a variable name and a value to update it to
+message_updatesetting_failed = That variable name doesn't seem to exist
+message_updatesetting_success = Updated {} from {} to {}
+message_addsetting_failed = That variable name already exists
+message_addsetting_success = Successfully added setting
 message_nomentioneduser = I need exactly one mentioned user!
 message_nomentioneduser2 = I need exactly zero or one mentioned user!
 message_addadmin_success = <@!{}> is now a {} admin!
 message_addadmin_failed = That user is already a {} admin
 message_removeadmin_success = <@!{}> is no longer a {} admin
 message_removeadmin_failed = That user is not a {} admin
+message_purge_invalidparam = Please give me an integer number of messages to search
 message_restrict_success = <@!{}> is now restricted from using {} commands
 message_restrict_failed = That user is already restricted
 message_restrict_failed2 = {} admins cannot be restricted
@@ -18,9 +25,15 @@ message_unrestrict_success = <@!{}> is now unrestricted from using {} commands
 message_unrestrict_failed = That user is not restricted
 message_oops_success = Deleted last output from this user
 message_oops_failed = No last output from this user to delete
-message_help = Hi, I'm a cool bot that does nothing! Try running the commands command for a list of available commands. If you give me one of those commands as a parameter for this help command you just ran, I'll tell you what it does and how to use it.
+message_rollresult = {} rolls {} point(s)
+message_help = Hi, I'm a cool bot that does nothing! Try running {cp}commands for a list of available commands. If you give me one of those commands as a parameter for this help command you just ran, I'll tell you what it does and how to use it.
 message_help_oops = Deletes the bot message from the user's last valid command
 message_help_commands = Provides the list of commands available for the user to run
 message_help_help = wtf
 message_help_userinfo = Shows some info on the mentioned user (or yourself if there is no mentioned user)
+message_help_roll = Generate a random number between 0 and an optional given maximum (default is 100)
 message_help_unknowncommand = I don't know this command or there is no help message for this command
+
+#VARIABLES
+rolldefaultmax = 100
+purgesearchlimit = 100

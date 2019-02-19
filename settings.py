@@ -7,7 +7,7 @@ settingsfile = "settings.txt"
 #BOT SETTINGS
 botname = "Koduck"
 token = ""
-commandprefix = "!"
+commandprefix = "/"
 paramdelim = ", "
 masteradmin = ""
 logformat = "%t\t%U\t%m\t%r"

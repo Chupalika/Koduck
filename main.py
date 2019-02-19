@@ -1,17 +1,18 @@
 import asyncio
-import sys, os
+import sys, os, random
 import koduck
 import settings
 
 #Background task is run every set interval while bot is running (by default every 10 seconds)
 def backgroundtask():
-    okay = "okay"
+    pass
 settings.backgroundtask = backgroundtask
 
-#COMMANDS
+##################
+# BASIC COMMANDS #
+##################
 async def shutdown(message, params):
-    await koduck.client.logout()
-    return
+    return await koduck.client.logout()
 
 async def sendmessage(message, params):
     if len(params) < 2:
@@ -19,20 +20,13 @@ async def sendmessage(message, params):
     channelid = params[0]
     THEchannel = koduck.client.get_channel(channelid)
     THEmessagecontent = settings.paramdelim.join(params[1:]).replace(channelid, "")
-    return await koduck.sendmessage(message, sendchannel=THEchannel, sendcontent=THEmessagecontent)
-
-#note: discord server prevents any user, including bots, from changing usernames more than twice per hour
-async def changeusername(message, params):
-    if len(params) == 0:
-        return await koduck.sendmessage(message, sendcontent=settings.message_changeusername_noparam)
-    return await koduck.client.edit_profile(username=settings.paramdelim.join(params))
+    return await koduck.sendmessage(message, sendchannel=THEchannel, sendcontent=THEmessagecontent, ignorecd=True)
 
 async def changestatus(message, params):
-    if len(params) == 0:
-        await koduck.client.change_presence(game=discord.Game(name=""))
+    if len(params) < 1:
+        return await koduck.client.change_presence(game=koduck.discord.Game(name=""))
     else:
-        await koduck.client.change_presence(game=discord.Game(name=settings.paramdelim.join(params)))
-    return
+        return await koduck.client.change_presence(game=koduck.discord.Game(name=settings.paramdelim.join(params)))
 
 async def updateuserlevels(message, params):
     koduck.updateuserlevels()
@@ -41,6 +35,30 @@ async def updateuserlevels(message, params):
 async def updatesettings(message, params):
     koduck.updatesettings()
     return
+
+#note: discord server prevents any user, including bots, from changing usernames more than twice per hour
+#bot name is updated in the background task, so it won't update immediately
+async def updatesetting(message, params):
+    if len(params) < 2:
+        return await koduck.sendmessage(message, sendcontent=settings.message_updatesetting_noparam)
+    variable = params[0]
+    value = settings.paramdelim.join(params[1:])
+    result = koduck.updatesetting(variable, value)
+    if result is not None:
+        return await koduck.sendmessage(message, sendcontent=settings.message_updatesetting_success.format(variable, result, value))
+    else:
+        return await koduck.sendmessage(message, sendcontent=settings.message_updatesetting_failed)
+
+async def addsetting(message, params):
+    if len(params) < 2:
+        return await koduck.sendmessage(message, sendcontent=settings.message_updatesetting_noparam)
+    variable = params[0]
+    value = settings.paramdelim.join(params[1:])
+    result = koduck.addsetting(variable, value)
+    if result is not None:
+        return await koduck.sendmessage(message, sendcontent=settings.message_addsetting_success)
+    else:
+        return await koduck.sendmessage(message, sendcontent=settings.message_addsetting_failed)
 
 async def admin(message, params):
     #need exactly one mentioned user (the order in the mentioned list is unreliable)
@@ -71,6 +89,16 @@ async def unadmin(message, params):
     else:
         koduck.updateuserlevel(userid, 1)
         return await koduck.sendmessage(message, sendcontent=settings.message_removeadmin_success.format(userid, settings.botname))
+
+async def purge(message, params):
+    try:
+        limit = min(int(params[0]), settings.purgesearchlimit)
+    except (IndexError, ValueError):
+        return await koduck.sendmessage(message, sendcontent=settings.message_purge_invalidparam)
+    #search the past "limit" number of messages and delete only the bot's messages
+    async for message2 in koduck.client.logs_from(message.channel, limit=limit):
+        if message2.author.id == koduck.client.user.id:
+            await koduck.client.delete_message(message2)
 
 async def restrictuser(message, params):
     #need exactly one mentioned user (the order in the mentioned list is unreliable)
@@ -126,17 +154,15 @@ async def commands(message, params):
 async def help(message, params):
     #Default message if no parameter is given
     if len(params) == 0:
-        return await koduck.sendmessage(message, sendcontent=settings.message_help)
-    #Try to retrieve the help message for the queried command
+        return await koduck.sendmessage(message, sendcontent=settings.message_help.replace("{cp}", settings.commandprefix).replace("{pd}", settings.paramdelim))
+    #Try to retrieve the help message for the query
     else:
         querycommand = params[0]
-        if querycommand not in koduck.commands.keys():
+        try:
+            #Use {cp} for command prefix and {pd} for parameter delimiter
+            return await koduck.sendmessage(message, sendcontent=getattr(settings, "message_help_{}".format(querycommand)).replace("{cp}", settings.commandprefix).replace("{pd}", settings.paramdelim))
+        except AttributeError:
             return await koduck.sendmessage(message, sendcontent=settings.message_help_unknowncommand)
-        else:
-            try:
-                return await koduck.sendmessage(message, sendcontent=getattr(settings, "message_help_{}".format(querycommand)))
-            except AttributeError:
-                return await koduck.sendmessage(message, sendcontent=settings.message_help_unknowncommand)
 
 async def userinfo(message, params):
     #if there is no mentioned user (apparently they have to be in the server to be considered "mentioned"), use the message sender instead
@@ -172,21 +198,38 @@ async def userinfo(message, params):
         embed.set_thumbnail(url=avatar)
         return await koduck.sendmessage(message, sendembed=embed)
 
+async def roll(message, params):
+    if len(params) >= 1:
+        try:
+            max = int(params[0])
+        except ValueError:
+            max = settings.rolldefaultmax
+    else:
+        max = settings.rolldefaultmax
+    
+    if max >= 0:
+        return await koduck.sendmessage(message, sendcontent=settings.message_rollresult.format(message.author.mention, random.randint(0, max)))
+    else:
+        return await koduck.sendmessage(message, sendcontent=settings.message_rollresult.format(message.author.mention, random.randint(max, 0)))
+
 def setup():
     koduck.addcommand("shutdown", shutdown, 3)
     koduck.addcommand("sendmessage", sendmessage, 3)
-    koduck.addcommand("changeusername", changeusername, 3)
     koduck.addcommand("changestatus", changestatus, 3)
     koduck.addcommand("updateuserlevels", updateuserlevels, 3)
     koduck.addcommand("updatesettings", updatesettings, 3)
+    koduck.addcommand("updatesetting", updatesetting, 2)
+    koduck.addcommand("addsetting", addsetting, 2)
     koduck.addcommand("admin", admin, 3)
     koduck.addcommand("unadmin", unadmin, 3)
+    koduck.addcommand("purge", purge, 3)
     koduck.addcommand("restrictuser", restrictuser, 2)
     koduck.addcommand("unrestrictuser", unrestrictuser, 2)
     koduck.addcommand("oops", oops, 1)
     koduck.addcommand("commands", commands, 1)
     koduck.addcommand("help", help, 1)
     koduck.addcommand("userinfo", userinfo, 1)
+    koduck.addcommand("roll", roll, 1)
 
 setup()
 koduck.client.run(settings.token)
