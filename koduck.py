@@ -1,16 +1,29 @@
 # -*- coding: utf_8 -*-
+#Koduck connects to Discord as a bot and sets up a system in which functions are triggered by messages it can see that meet a set of conditions
+#Yadon helps by using text files to keep track of data, like command details, settings, and user levels!
+#- Yadon will provide fresh data whenever it's used. However, Koduck needs to keep its own track of two things and won't know if the text files were manually updated:
+#-- Command details include function objects, which can't be passed in simply through text (from Yadon), since Koduck should not have access to main
+#--- Which means command details can only be passed in from outside (main) either before client startup or through a function triggered by a command
+#--- To make it easier to initialize commands from Yadon, Koduck will try to run the "updatecommands" command after startup if it was passed in
+#-- Settings are stored as attributes in a module where a bunch of required settings are initialized
+#--- Settings read from the settings table will replace any initialized settings
+#--- If a setting is removed from the settings table and updatesettings() is called, the setting will still be active (to be fixed)
 
 import discord
 import asyncio
 import sys, os, traceback
 import datetime
-import settings
+import settings, yadon
 
 client = discord.Client()
-commands = {} #command -> (function, tier), where function is the function to run, and tier is the user authority level required to run the command
-userlevels = {} #userid -> authority level
+
+#command -> (function, type, tier)
+#command is a string which represents the command name
+#function is the function object to run when the command is triggered
+#type is a string that determines the trigger type of the command, should be one of (prefix, match, contain)
+#tier is an integer which represents the user authority level required to run the command
+commands = {}
 userlastoutput = {} #userid -> bot's most recent Discord Message in response to the user (only keeps track since bot startup)
-global lastmessageDT
 lastmessageDT = {} #channelid -> datetime of most recent Discord Message sent
 
 #######################
@@ -60,20 +73,23 @@ async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembe
     if receivemessage is not None:
         if sendchannel is None:
             sendchannel = receivemessage.channel
-        
-    #calculate time since the last bot output on this channel
-    global lastmessageDT
-    try:
-        TD = datetime.datetime.now() - lastmessageDT[sendchannel.id]
-        cooldownactive = ((TD.microseconds / 1000) + (TD.seconds * 1000) < settings.channelcooldown)
-    except KeyError:
-        cooldownactive = False
+    
+    #CHECK COOLDOWN
+    userlevel = getuserlevel(receivemessage.author.id)
+    cooldownactive = False
+    if userlevel < settings.ignorecdlevel:
+        #calculate time since the last bot output on this channel
+        global lastmessageDT
+        try:
+            TD = datetime.datetime.now() - lastmessageDT[sendchannel.id]
+            cooldownactive = ((TD.microseconds / 1000) + (TD.seconds * 1000) < settings.channelcooldown)
+        except KeyError:
+            pass
     
     if receivemessage is not None:
         #calculate time since the last bot output from the user
         try:
             TD = datetime.datetime.now() - userlastoutput[receivemessage.author.id].timestamp
-            userlevel = userlevels[receivemessage.author.id]
             usercooldown = 0
             while usercooldown == 0 and userlevel >= 0:
                 try:
@@ -83,10 +99,10 @@ async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembe
             cooldownactive = ((TD.microseconds / 1000) + (TD.seconds * 1000) < usercooldown) or cooldownactive
         except KeyError:
             pass
-    
     #ignore message if bot is on channel cooldown or user cooldown
     if cooldownactive and not ignorecd:
-        return settings.message_cooldownactive
+        log(receivemessage, logresult=settings.message_cooldownactive)
+        return
     
     #Discord messages cap at 2000 characters
     if len(sendcontent) > 2000:
@@ -102,95 +118,26 @@ async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembe
     return THEmessage
 
 #Assciates a String to a Function.
-#- command: a String which is the command name or alias
-#- function: the Function that the command calls
-#- tier: a level of authority needed to run this command
-def addcommand(command, function, tier):
-    commands[command] = (function, tier)
+#- command: a string which represents the command name (will be converted to lowercase)
+#- function: the function object that the command should call
+#- type: a string that determines the trigger type of the command, should be one of (prefix, match, contain)
+#- tier: an integer which represents the level of authority needed to run this command
+def addcommand(command, function, type, tier):
+    commands[command.lower()] = (function, type, tier)
 
-#Use this function if userlevels.txt was manually edited (it will always be run on startup)
-def updateuserlevels():
-    userlevels.clear()
-    userlevels[settings.masteradmin] = 9
-    try:
-        file = open(settings.userlevelsfile)
-    except FileNotFoundError:
-        return
-    filecontents = file.read()
-    file.close()
-    lines = filecontents.split("\n")
-    for i in range(len(lines)):
-        line = lines[i]
-        if line == "":
-            continue
-        try:
-            userid = line.split("\t")[0]
-            level = line.split("\t")[1]
-            userlevels[userid] = int(level)
-        except (IndexError, ValueError):
-            print("error parsing user level on line {}".format(i))
+def clearcommands():
+    commands = {}
 
-#Updates a user's authority level. Returns 0 if successful, -1 if not (i.e. level wasn't an integer)
-def updateuserlevel(userid, level):
-    #level should be an integer
-    try:
-        int(level)
-    except ValueError:
-        return -1
-    
-    #update userlevels.txt if it includes the user, otherwise append new entry
-    if userid in userlevels.keys():
-        userlevels[userid] = int(level)
-        file = open(settings.userlevelsfile)
-        filecontents = file.read()
-        file.close()
-        lines = filecontents.split("\n")
-        newfile = open(settings.userlevelsfile, "w")
-        for i in range(len(lines)):
-            line = lines[i]
-            if line == "":
-                continue
-            try:
-                userid2 = line.split("\t")[0]
-                level2 = line.split("\t")[1]
-                if userid == userid2:
-                    newfile.write("{}\t{}\n".format(userid, level))
-                else:
-                    newfile.write("{}\n".format(line))
-            except (IndexError, ValueError):
-                print("error parsing user level on line {}".format(i))
-                newfile.write("{}\n".format(line))
-        newfile.close()
-    else:
-        userlevels[userid] = int(level)
-        file = open(settings.userlevelsfile, "a")
-        file.write("{}\t{}\n".format(userid, level))
-        file.close()
-        
-    return 0
-
-#Returns a user's authority level (default is 1)
-def getuserlevel(userid):
-    try:
-        return userlevels[userid]
-    except KeyError:
-        return 1
-
-#Use this function if settings.txt was manually updated (it will always be run on startup)
+#Use this function if settings table was manually updated (it will always be run on startup)
 #token can only be updated by restarting the bot
 #botname is updated in the background task, so it won't update immediately
+#Note: settings is a module with attributes, so removing a setting manually from the table doesn't actually remove the attribute
 def updatesettings():
-    file = open(settings.settingsfile, encoding="utf8")
-    filecontents = file.read()
-    file.close()
-    lines = filecontents.split("\n")
-    for i in range(len(lines)):
-        line = lines[i]
-        if line == "" or line.startswith("#"):
-            continue
+    table = yadon.ReadTable(settings.settingstablename)
+    for key, values in table.items():
         try:
-            variable = line.split(" = ")[0]
-            value = line[line.index(" = ")+3:]
+            value = values[0]
+            #try to convert into float or int, otherwise treat as string
             try:
                 if float(value) % 1 == 0:
                     value = int(value)
@@ -198,10 +145,9 @@ def updatesettings():
                     value = float(value)
             except ValueError:
                 value = value.replace("\\n", "\n").replace("\\t", "\t")
-            setattr(settings, variable, value)
-        except (IndexError, ValueError):
-            print("failed to parse settings on line {}".format(i))
-    settings.masteradmin = str(settings.masteradmin)
+        except IndexError:
+            value = None
+        setattr(settings, key, value)
 
 #update a setting and updates the settings file accordingly
 #returns None if setting name doesn't exist, returns old value if it does and updating its value succeeded
@@ -212,39 +158,7 @@ def updatesetting(variable, value):
         return
     
     value = value.replace("\n", "\\n").replace("\t", "\\t")
-    
-    file = open(settings.settingsfile, encoding="utf8")
-    filecontents = file.read()
-    file.close()
-    
-    lines = filecontents.split("\n")
-    newfile = open(settings.settingsfile, "w", encoding="utf8")
-    result = False
-    for i in range(len(lines)):
-        line = lines[i]
-        if line == "" or line.startswith("#"):
-            #prevent adding a blank line to the end
-            if line == "" and i == len(lines) - 1:
-                continue
-            else:
-                newfile.write("{}\n".format(line))
-                continue
-        try:
-            oldvariable = line.split(" = ")[0]
-            if oldvariable == variable:
-                newfile.write("{} = {}\n".format(variable, value))
-                result = True
-            else:
-                newfile.write("{}\n".format(line))
-        except (IndexError, ValueError):
-            newfile.write("{}\n".format(line))
-    
-    #if result is False at this point, that means it was in settings.py
-    #append this override into settings.txt
-    if not result:
-        newfile.write("{} = {}\n".format(variable, value))
-    newfile.close()
-    
+    yadon.WriteRowToTable(settings.settingstablename, variable, [value])
     try:
         if float(value) % 1 == 0:
             value = int(value)
@@ -265,10 +179,7 @@ def addsetting(variable, value):
         pass
     
     value = value.replace("\n", "\\n").replace("\t", "\\t")
-    file = open(settings.settingsfile, "a", encoding="utf8")
-    file.write("{} = {}\n".format(variable, value))
-    file.close()
-    
+    yadon.WriteRowToTable(settings.settingstablename, variable, [value])
     try:
         if float(value) % 1 == 0:
             value = int(value)
@@ -279,16 +190,35 @@ def addsetting(variable, value):
     setattr(settings, variable, value)
     return value
 
+#Updates a user's authority level. Returns 0 if successful, -1 if not (i.e. level wasn't an integer)
+def updateuserlevel(userid, level):
+    #level should be an integer
+    try:
+        int(level)
+    except ValueError:
+        return -1
+    
+    yadon.WriteRowToTable(settings.userlevelstablename, userid, [str(level)])
+    return 0
+
+def getuserlevel(userid):
+    try:
+        return int(yadon.ReadRowFromTable(settings.userlevelstablename, userid)[0])
+    except (TypeError, IndexError, ValueError):
+        return 1
+
 #Run a command as if it was triggered by a Discord message
 async def runcommand(command, message=None, params=[]):
-    function = commands[command][0]
-    result = await function(message, params)
+    try:
+        function = commands[command][0]
+        return await function(message, params)
+    except (KeyError, IndexError):
+        return
 
 #######
 #SETUP#
 #######
 updatesettings()
-updateuserlevels()
 
 #background task is run every set interval while bot is running
 async def backgroundtask():
@@ -296,10 +226,8 @@ async def backgroundtask():
     while not client.is_closed:
         if client.user.bot and client.user.name != settings.botname:
             await client.edit_profile(username=settings.botname)
-        try:
-            await settings.backgroundtask()
-        except TypeError:
-            pass
+        if callable(settings.backgroundtask):
+            client.loop.create_task(settings.backgroundtask())
         await asyncio.sleep(settings.backgroundtaskinterval)
 client.loop.create_task(backgroundtask())
 
@@ -308,13 +236,13 @@ async def on_ready():
     print("Bot online!")
     print("Name: {}".format(client.user.name))
     print("ID: {}".format(client.user.id))
+    await runcommand("updatecommands")
 
 ##############
 #INPUT OUTPUT#
 ##############
 @client.event
 async def on_message(message):
-    
     #ignore bot messages
     if message.author.bot:
         return
@@ -323,27 +251,29 @@ async def on_message(message):
         #PARSE COMMAND AND PARAMS
         command = ""
         params = []
-        if message.content.startswith(settings.commandprefix):
-            try:
-                command = message.content[len(settings.commandprefix):message.content.index(" ")]
-                params = message.content[message.content.index(" ")+1:].split(settings.paramdelim)
-            except ValueError:
-                command = message.content[len(settings.commandprefix):]
-        else:
-            return
-        command = command.lower()
-        
-        #CHECK IF COMMAND EXISTS
-        if command not in commands.keys():
-            log(message, logresult=settings.message_unknowncommand)
+        for commandname in commands.keys():
+            if commandname in message.content.lower():
+                commanddetails = commands[commandname]
+                entireprefix = settings.commandprefix + commandname
+                if message.content.lower().startswith(entireprefix) and commanddetails[1] == "prefix":
+                    command = commandname
+                    #Only prefixed commands should have parameters
+                    extra = message.content[len(entireprefix)+1:]
+                    if len(extra) > 0:
+                        params = extra.split(settings.paramdelim)
+                    break
+                elif message.content.lower() == commandname and commanddetails[1] == "match":
+                    command = commandname
+                    break
+                elif commanddetails[1] == "contain":
+                    command = commandname
+                    break
+        if command == "":
             return
         
         #CHECK PERMISSIONS OF USER
-        try:
-            authoritylevel = userlevels[message.author.id]
-        except KeyError:
-            authoritylevel = 1
-        if authoritylevel < commands[command][1]:
+        userlevel = getuserlevel(message.author.id)
+        if userlevel < commands[command][2]:
             await sendmessage(message, sendcontent=settings.message_restrictedaccess)
             log(message, logresult=settings.message_restrictedaccess)
             return
@@ -352,6 +282,8 @@ async def on_message(message):
         #RUN THE COMMAND
         function = commands[command][0]
         result = await function(message, params)
+        if isinstance(result, str):
+            log(message, logresult=result)
     
     except Exception as e:
         traceback.print_exc()

@@ -1,16 +1,28 @@
+import discord
 import asyncio
 import sys, os, random
-import koduck
+import koduck, yadon
 import settings
 
 #Background task is run every set interval while bot is running (by default every 10 seconds)
-def backgroundtask():
+async def backgroundtask():
     pass
 settings.backgroundtask = backgroundtask
 
 ##################
 # BASIC COMMANDS #
 ##################
+#Be careful not to leave out this command or else a restart might be needed for any updates to commands
+async def updatecommands(message, params):
+    tableitems = yadon.ReadTable(settings.commandstablename).items()
+    if tableitems is not None:
+        koduck.clearcommands()
+        for name, details in tableitems:
+            try:
+                koduck.addcommand(name, globals()[details[0]], details[1], int(details[2]))
+            except (KeyError, IndexError, ValueError):
+                pass
+
 async def shutdown(message, params):
     return await koduck.client.logout()
 
@@ -24,13 +36,9 @@ async def sendmessage(message, params):
 
 async def changestatus(message, params):
     if len(params) < 1:
-        return await koduck.client.change_presence(game=koduck.discord.Game(name=""))
+        return await koduck.client.change_presence(game=discord.Game(name=""))
     else:
-        return await koduck.client.change_presence(game=koduck.discord.Game(name=settings.paramdelim.join(params)))
-
-async def updateuserlevels(message, params):
-    koduck.updateuserlevels()
-    return
+        return await koduck.client.change_presence(game=discord.Game(name=settings.paramdelim.join(params)))
 
 async def updatesettings(message, params):
     koduck.updatesettings()
@@ -66,10 +74,10 @@ async def admin(message, params):
         return await koduck.sendmessage(message, sendcontent=settings.message_nomentioneduser)
     
     userid = message.mentions[0].id
-    currentlevel = koduck.getuserlevel(userid)
+    userlevel = koduck.getuserlevel(userid)
     
     #already an admin
-    if currentlevel == 2:
+    if userlevel == 2:
         return await koduck.sendmessage(message, sendcontent=settings.message_addadmin_failed.format(settings.botname))
     else:
         koduck.updateuserlevel(userid, 2)
@@ -81,10 +89,10 @@ async def unadmin(message, params):
         return await koduck.sendmessage(message, sendcontent=settings.message_nomentioneduser)
     
     userid = message.mentions[0].id
-    currentlevel = koduck.getuserlevel(userid)
+    userlevel = koduck.getuserlevel(userid)
     
     #not an admin
-    if currentlevel < 2:
+    if userlevel < 2:
         return await koduck.sendmessage(message, sendcontent=settings.message_removeadmin_failed.format(settings.botname))
     else:
         koduck.updateuserlevel(userid, 1)
@@ -106,13 +114,13 @@ async def restrictuser(message, params):
         return await koduck.sendmessage(message, sendcontent=settings.message_nomentioneduser)
     
     userid = message.mentions[0].id
-    currentlevel = koduck.getuserlevel(userid)
+    userlevel = koduck.getuserlevel(userid)
     
     #already restricted
-    if currentlevel == 0:
+    if userlevel == 0:
         return await koduck.sendmessage(message, sendcontent=settings.message_restrict_failed)
     #don't restrict high level users
-    elif currentlevel > 2:
+    elif userlevel >= 2:
         return await koduck.sendmessage(message, sendcontent=settings.message_restrict_failed2.format(settings.botname))
     else:
         koduck.updateuserlevel(userid, 0)
@@ -124,9 +132,9 @@ async def unrestrictuser(message, params):
         return await koduck.sendmessage(message, sendcontent=settings.message_nomentioneduser)
     
     userid = message.mentions[0].id
-    currentlevel = koduck.getuserlevel(userid)
+    userlevel = koduck.getuserlevel(userid)
     
-    if currentlevel != 0:
+    if userlevel != 0:
         return await koduck.sendmessage(message, sendcontent=settings.message_unrestrict_failed)
     else:
         koduck.updateuserlevel(userid, 1)
@@ -137,7 +145,7 @@ async def oops(message, params):
         THEmessage = koduck.userlastoutput[message.author.id]
         await koduck.client.delete_message(THEmessage)
         return settings.message_oops_success
-    except (KeyError, koduck.discord.errors.NotFound):
+    except (KeyError, discord.errors.NotFound):
         return settings.message_oops_failed
     return
 
@@ -147,7 +155,7 @@ async def commands(message, params):
     availablecommands = []
     for commandname in koduck.commands.keys():
         command = koduck.commands[commandname]
-        if command[1] <= currentlevel:
+        if command[2] <= currentlevel:
             availablecommands.append(commandname)
     return await koduck.sendmessage(message, sendcontent=", ".join(availablecommands))
 
@@ -186,15 +194,15 @@ async def userinfo(message, params):
         joindate = user.joined_at
         color = user.color
         if game is None:
-            embed = koduck.discord.Embed(title="{}#{}".format(username, discr), description=str(user.status), color=color)
+            embed = discord.Embed(title="{}#{}".format(username, discr), description=str(user.status), color=color)
         else:
-            embed = koduck.discord.Embed(title="{}#{}".format(username, discr), description="Playing {}".format(game.name), color=color)
+            embed = discord.Embed(title="{}#{}".format(username, discr), description="Playing {}".format(game.name), color=color)
         embed.add_field(name="Account creation date", value=creationdate.strftime("%Y-%m-%d %H:%M:%S UTC"), inline=False)
         embed.add_field(name="Server join date", value=joindate.strftime("%Y-%m-%d %H:%M:%S UTC"), inline=False)
         embed.set_thumbnail(url=avatar)
         return await koduck.sendmessage(message, sendembed=embed)
     else:
-        embed = koduck.discord.Embed(title="{}#{}".format(username, discr), description="Account creation date: {}".format(creationdate.strftime("%Y-%m-%d %H:%M:%S UTC")))
+        embed = discord.Embed(title="{}#{}".format(username, discr), description="Account creation date: {}".format(creationdate.strftime("%Y-%m-%d %H:%M:%S UTC")))
         embed.set_thumbnail(url=avatar)
         return await koduck.sendmessage(message, sendembed=embed)
 
@@ -213,23 +221,7 @@ async def roll(message, params):
         return await koduck.sendmessage(message, sendcontent=settings.message_rollresult.format(message.author.mention, random.randint(max, 0)))
 
 def setup():
-    koduck.addcommand("shutdown", shutdown, 3)
-    koduck.addcommand("sendmessage", sendmessage, 3)
-    koduck.addcommand("changestatus", changestatus, 3)
-    koduck.addcommand("updateuserlevels", updateuserlevels, 3)
-    koduck.addcommand("updatesettings", updatesettings, 3)
-    koduck.addcommand("updatesetting", updatesetting, 2)
-    koduck.addcommand("addsetting", addsetting, 2)
-    koduck.addcommand("admin", admin, 3)
-    koduck.addcommand("unadmin", unadmin, 3)
-    koduck.addcommand("purge", purge, 3)
-    koduck.addcommand("restrictuser", restrictuser, 2)
-    koduck.addcommand("unrestrictuser", unrestrictuser, 2)
-    koduck.addcommand("oops", oops, 1)
-    koduck.addcommand("commands", commands, 1)
-    koduck.addcommand("help", help, 1)
-    koduck.addcommand("userinfo", userinfo, 1)
-    koduck.addcommand("roll", roll, 1)
+    koduck.addcommand("updatecommands", updatecommands, "prefix", 3)
 
 setup()
 koduck.client.run(settings.token)

@@ -1,8 +1,9 @@
 #BOT FILES
-userlevelsfile = "userlevels.txt"
+commandstablename = "commands"
+settingstablename = "settings"
+userlevelstablename = "userlevels"
 logfile = "log.txt"
 formattedlogfile = "formattedlog.txt"
-settingsfile = "settings.txt"
 
 #BOT SETTINGS
 botname = "Koduck"
@@ -10,8 +11,9 @@ token = ""
 commandprefix = "/"
 paramdelim = ", "
 masteradmin = ""
-logformat = "%t\t%U\t%m\t%r"
+logformat = "%t\t%s\t%c\t%U\t%m\t%r"
 channelcooldown = 1000
+ignorecdlevel = 2
 usercooldown_0 = 60000
 usercooldown_1 = 3000
 backgroundtask = None
