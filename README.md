@@ -48,6 +48,7 @@ A Yadon table that stores details about commands.
 - The second column represents the name of the function in main.py that will be called
 - The third column represents the type of trigger: prefix triggers if the message begins with the bot prefix + the trigger text (this type is the only type that supports having parameters), match triggers if the message matches the text exactly, contain triggers if the message contains the text
 - The fourth column represents the minimum user level required to use this command
+
 Remember to add your commands to this table when you finish coding new command functions in main.py!
 
 ### settings.txt
@@ -74,6 +75,7 @@ This file stores the history of the bot's activity in a customizable, hopefully 
 - %n represents nickname
 - %m represents the user message
 - %r represents the output result
+
 Many of these values can be empty, especially when logging activity that does not involve discord messages.
 
 ### customresponses.txt
