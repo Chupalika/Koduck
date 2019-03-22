@@ -9,13 +9,14 @@ formattedlogfile = "formattedlog.txt"
 botname = "Koduck"
 token = ""
 commandprefix = "/"
-paramdelim = ", "
+paramdelim = ","
 masteradmin = ""
 logformat = "%t\t%s\t%c\t%U\t%m\t%r"
 channelcooldown = 1000
 ignorecdlevel = 2
 usercooldown_0 = 60000
 usercooldown_1 = 3000
+outputhistorysize = 10
 backgroundtask = None
 backgroundtaskinterval = 10
 
