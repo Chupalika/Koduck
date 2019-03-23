@@ -40,7 +40,14 @@ Provides tools for reading and writing data to and from text files in TSV table 
 - Although Koduck uses a few Yadon tables to help it operate, it needs to store the data read from the settings and commands tables, which means they don't update values on the fly if edited manually. That's why there are update command functions provided in main.py.
 
 ### main.py
-A template that uses Koduck. It adds a bunch of basic commands like shutdown, restrictuser, and userinfo. Use them as a guide to add your own commands, and feel free to remove any functions you don't need.
+A template that uses Koduck. It adds a bunch of basic commands like shutdown, restrictuser, and userinfo. Use them as a guide to add your own commands, and feel free to remove any functions you don't need. Note that each command function should use the signature (context, \*arg, \*\*kwargs). An example of a prefix command might look like this: ``/stage Psyduck, option=shorthand``
+* context will contain:
+  * 'message' is the Discord.Message object that triggered the command
+  * 'command' is the trigger text ('stage')
+  * 'commandline' is the message text except for the prefix ('stage Psyduck, option=shorthand')
+  * 'params' is a list of the parameters (\['Psyduck', 'option=shorthand'\])
+  * 'paramline' is the message text except for the prefix and command ('Psyduck, option=shorthand')
+* \*args is a list of the unnamed parameters (\['Psyduck'\]) and \*\*kwargs is a dict of the named parameters ({'option':'shorthand'})
 
 ### commands.txt
 A Yadon table that stores details about commands.
