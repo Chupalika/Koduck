@@ -1,43 +1,43 @@
 botname	Koduck	2
-token	token	3
-logformat	%t\t%s\t%c\t%U\t[%n]\t%m\t%r	3
-customresponsestablename	customresponses	3
-message_sendmessage_noparam	I need two parameters: channelid and message	3
-message_updatesetting_noparam	I need a variable name and a value to update it to	3
-message_updatesetting_failed	That setting name doesn't seem to exist or you don't have permission to edit it	3
-message_updatesetting_success	Updated {} from {} to {}	3
-message_addsetting_failed	That setting name already exists	3
-message_addsetting_success	Successfully added setting	3
-message_removesetting_noparam	I need a setting name to delete	3
-message_removesetting_failed	That setting name doesn't seem to exist or you don't have permission to edit it	3
-message_removesetting_success	Successfully removed setting	3
-message_nomentioneduser	I need exactly one mentioned user!	3
-message_nomentioneduser2	I need exactly zero or one mentioned user!	3
-message_addadmin_success	<@!{}> is now a {} admin!	3
-message_addadmin_failed	That user is already a {} admin	3
-message_removeadmin_success	<@!{}> is no longer a {} admin	3
-message_removeadmin_failed	That user is not a {} admin	3
-message_purge_invalidparam	Please give me an integer number of bot messages to purge	3
-message_restrict_success	<@!{}> is now restricted from using {} commands	3
-message_restrict_failed	That user is already restricted	3
-message_restrict_failed2	{} admins cannot be restricted	3
-message_unrestrict_success	<@!{}> is now unrestricted from using {} commands	3
-message_unrestrict_failed	That user is not restricted	3
-message_addresponse_noparam	I need a trigger message and a custom response message	3
-message_addresponse_success	Added a custom response: '{}' -> '{}'	3
-message_addresponse_failed	That trigger message already has a custom response message	3
-message_removeresponse_noparam	I need a trigger message to remove the custom response for	3
-message_removeresponse_success	Removed a custom response	3
-message_removeresponse_failed	'{}' doesn't seem to have a corresponding custom response	3
-message_oops_success	Deleted last output from this user	3
-message_oops_failed	No last output from this user to delete	3
-message_rollresult	{} rolls {} point(s)	3
-message_help	Hi, I'm a cool bot that does nothing! Try running {cp}commands for a list of available commands. If you give me one of those commands as a parameter for this help command you just ran, I'll tell you what it does and how to use it.	3
-message_help_oops	Deletes the bot message from the user's last valid command	3
-message_help_commands	Provides the list of commands available for the user to run	3
-message_help_help	wtf	3
-message_help_userinfo	Shows some info on the mentioned user (or yourself if there is no mentioned user)	3
-message_help_roll	Generate a random number between 0 and an optional given maximum (default is 100)	3
-message_help_unknowncommand	I don't know this command or there is no help message for this command	3
+token	token
+logformat	%t\t%s\t%c\t%U\t[%n]\t%m\t%r
+customresponsestablename	customresponses
+message_sendmessage_noparam	I need two parameters: channelid and message
+message_updatesetting_noparam	I need a variable name and a value to update it to
+message_updatesetting_failed	That setting name doesn't seem to exist or you don't have permission to edit it
+message_updatesetting_success	Updated {} from {} to {}
+message_addsetting_failed	That setting name already exists
+message_addsetting_success	Successfully added setting
+message_removesetting_noparam	I need a setting name to delete
+message_removesetting_failed	That setting name doesn't seem to exist or you don't have permission to edit it
+message_removesetting_success	Successfully removed setting
+message_nomentioneduser	I need exactly one mentioned user!
+message_nomentioneduser2	I need exactly zero or one mentioned user!
+message_addadmin_success	<@!{}> is now a {} admin!
+message_addadmin_failed	That user is already a {} admin
+message_removeadmin_success	<@!{}> is no longer a {} admin
+message_removeadmin_failed	That user is not a {} admin
+message_purge_invalidparam	Please give me an integer number of bot messages to purge
+message_restrict_success	<@!{}> is now restricted from using {} commands
+message_restrict_failed	That user is already restricted
+message_restrict_failed2	{} admins cannot be restricted
+message_unrestrict_success	<@!{}> is now unrestricted from using {} commands
+message_unrestrict_failed	That user is not restricted
+message_addresponse_noparam	I need a trigger message and a custom response message
+message_addresponse_success	Added a custom response: '{}' -> '{}'
+message_addresponse_failed	That trigger message already has a custom response message
+message_removeresponse_noparam	I need a trigger message to remove the custom response for
+message_removeresponse_success	Removed a custom response
+message_removeresponse_failed	'{}' doesn't seem to have a corresponding custom response
+message_oops_success	Deleted last output from this user
+message_oops_failed	No last output from this user to delete
+message_rollresult	{} rolls {} point(s)
+message_help	Hi, I'm a cool bot that does nothing! Try running {cp}commands for a list of available commands. If you give me one of those commands as a parameter for this help command you just ran, I'll tell you what it does and how to use it.
+message_help_oops	Deletes the bot message from the user's last valid command
+message_help_commands	Provides the list of commands available for the user to run
+message_help_help	wtf
+message_help_userinfo	Shows some info on the mentioned user (or yourself if there is no mentioned user)
+message_help_roll	Generate a random number between 0 and an optional given maximum (default is 100)
+message_help_unknowncommand	I don't know this command or there is no help message for this command
 rolldefaultmax	100	2
-purgesearchlimit	100	3
+purgesearchlimit	100

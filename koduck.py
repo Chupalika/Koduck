@@ -189,8 +189,8 @@ def updatesettings():
         setattr(settings, key, value)
 
 #update a setting and updates the settings file accordingly
-#returns None if setting name doesn't exist or auth level is lower than setting's level (defaults to 1), returns old value if it does and updating its value succeeded
-def updatesetting(variable, value, authlevel=1):
+#returns None if setting name doesn't exist or auth level is lower than setting's level (defaults to max user level if not specified or setting is in settings.py), returns old value if it does and updating its value succeeded
+def updatesetting(variable, value, authlevel=settings.defaultuserlevel):
     try:
         oldvalue = getattr(settings, variable)
     except AttributeError:
@@ -199,12 +199,12 @@ def updatesetting(variable, value, authlevel=1):
     try:
         settinglevel = int(yadon.ReadRowFromTable(settings.settingstablename, variable)[1])
     except (IndexError, ValueError):
-        settinglevel = 1
+        settinglevel = settings.maxuserlevel
     if settinglevel > authlevel:
         return
     
     value = value.replace("\n", "\\n").replace("\t", "\\t")
-    yadon.WriteRowToTable(settings.settingstablename, variable, [value, settinglevel])
+    yadon.WriteRowToTable(settings.settingstablename, variable, [value, str(settinglevel)])
     try:
         if float(value) % 1 == 0:
             value = int(value)
@@ -217,7 +217,7 @@ def updatesetting(variable, value, authlevel=1):
 
 #add a setting and updates the settings file accordingly
 #returns None if setting already exists, returns value if it doesn't
-def addsetting(variable, value, authlevel=1):
+def addsetting(variable, value, authlevel=settings.defaultuserlevel):
     try:
         getattr(settings, variable)
         return
@@ -237,8 +237,8 @@ def addsetting(variable, value, authlevel=1):
     return value
 
 #remove a setting and updates the settings file accordingly
-#returns None if setting doesn't exist or level is lower than setting's level (defaults to 1), returns the old value if it did
-def removesetting(variable, authlevel=1):
+#returns None if setting doesn't exist or level is lower than setting's level (defaults to max user level if not specified or setting is in settings.py), returns the old value if it did
+def removesetting(variable, authlevel=settings.defaultuserlevel):
     try:
         value = getattr(settings, variable)
     except AttributeError:
@@ -247,7 +247,7 @@ def removesetting(variable, authlevel=1):
     try:
         settinglevel = int(yadon.ReadRowFromTable(settings.settingstablename, variable)[1])
     except (IndexError, ValueError):
-        settinglevel = 1
+        settinglevel = settings.maxuserlevel
     if settinglevel > authlevel:
         return
     
@@ -270,7 +270,7 @@ def getuserlevel(userid):
     try:
         return int(yadon.ReadRowFromTable(settings.userlevelstablename, userid)[0])
     except (TypeError, IndexError, ValueError):
-        return 1
+        return settings.defaultuserlevel
 
 #Run a command as if it was triggered by a Discord message
 async def runcommand(command, message=None, params=[]):
