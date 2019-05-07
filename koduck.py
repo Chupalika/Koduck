@@ -12,7 +12,7 @@
 import discord
 import asyncio
 import sys, os, traceback
-import datetime
+import datetime, pytz
 import settings, yadon
 
 client = discord.Client()
@@ -40,7 +40,7 @@ def log(message=None, logresult=""):
     logresult = logresult.replace("\n", "\\n")
     
     if message is None:
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
         
         #normal log file
         logstring = "{}\t\t\t\t\t{}\n".format(timestamp, logresult)
@@ -48,7 +48,7 @@ def log(message=None, logresult=""):
             file.write(logstring)
         
         #formatted log file
-        logstring = settings.logformat.replace("%t", timestamp).replace("%s", "").replace("%c", "#" + "").replace("%u", "").replace("%U", "").replace("%n", "").replace("%m", "").replace("%r", logresult) + "\n"
+        logstring = settings.logformat.replace("%t", timestamp).replace("%s", "").replace("%c", "").replace("%u", "").replace("%U", "").replace("%n", "").replace("%m", "").replace("%r", logresult) + "\n"
         with open(settings.formattedlogfile, "a", encoding="utf8") as file:
             file.write(logstring)
     
@@ -62,20 +62,20 @@ def log(message=None, logresult=""):
             servername = message.server.name
             nickname = message.author.nick or ""
         else:
-            servername = "None"
+            servername = ""
             nickname = ""
         if message.channel.name is not None:
             channelname = message.channel.name
         else:
-            channelname = "None"
+            channelname = ""
         
         #normal log file
-        logstring = "{}\t{}\t{}\t{}\t{}\t{}\n".format(timestamp, message.server.id, message.channel.id if message.server is not None else "", message.author.id, logmessage, logresult)
+        logstring = "{}\t{}\t{}\t{}\t{}\t{}\n".format(timestamp, message.server.id if message.server is not None else "", message.channel.id if message.server is not None else "", message.author.id, logmessage, logresult)
         with open(settings.logfile, "a", encoding="utf8") as file:
             file.write(logstring)
         
         #formatted log file
-        logstring = settings.logformat.replace("%t", timestamp).replace("%s", servername).replace("%c", "#" + channelname).replace("%u", username).replace("%U", "{}#{}".format(username, discr)).replace("%n", nickname).replace("%m", logmessage).replace("%r", logresult) + "\n"
+        logstring = settings.logformat.replace("%t", timestamp).replace("%s", servername).replace("%c", "#" + channelname if channelname else "").replace("%u", username).replace("%U", "{}#{}".format(username, discr)).replace("%n", nickname).replace("%m", logmessage).replace("%r", logresult) + "\n"
         with open(settings.formattedlogfile, "a", encoding="utf8") as file:
             file.write(logstring)
 
