@@ -16,7 +16,7 @@ The goal of Koduck is to give bot developers a quick start and several implement
 ## Requirements
 - Python 3.0 to 3.6 (discord.py does not work with 3.7+)
 - discord.py 0.16.6 (v1+ is an overhaul and I'm too lazy to refactor code at the moment)
-  - install in command prompt with ``python -m pip install -U discord.py==0.16.6``
+  - install in command prompt with ``python -m pip install discord.py==0.16.6``
 - a Discord application (create one [here](https://discordapp.com/developers/applications/))
   - turn it into a bot and take note of its token: it's basically its password
 - It would help a lot to have at least some experience programming in Python...
