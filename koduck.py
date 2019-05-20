@@ -198,7 +198,7 @@ def updatesetting(variable, value, authlevel=settings.defaultuserlevel):
     
     try:
         settinglevel = int(yadon.ReadRowFromTable(settings.settingstablename, variable)[1])
-    except (IndexError, ValueError):
+    except (IndexError, ValueError, TypeError):
         settinglevel = settings.maxuserlevel
     if settinglevel > authlevel:
         return
