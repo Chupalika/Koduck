@@ -1,9 +1,9 @@
 # Koduck
 
 ## Introduction
-Koduck is a Discord bot framework written in Python! Originally, I'd developed a bot named [KoduckBot](https://github.com/Chupalika/KoduckBot) that provides info from a game. After some time it occurred to me that I might want to create a similar bot for other games. The only differences would be the functions that collected and outputted game data. And also my code was a bit messy... So I got the idea to create a general bot with basic functions - this would be the base template - then add functions as needed. I tried to design it to be easy to learn and use, but I think it might be turning out too complex. :|
+Koduck is a Discord bot framework written in Python! Originally, I'd developed a bot named [KoduckBot](https://github.com/Chupalika/KoduckBot) that provides info from a game. After some time it occurred to me that I might want to create a similar bot for other games. The only differences would be the functions that collected and outputted game data. And also my code was a bit messy... So I got the idea to create a general bot with basic functions - this would be the base template - then add functions as needed. I tried to design it to be easy to learn and use, but I think it might be turning out to be too complex. :|
 
-The goal of Koduck is to give bot developers a quick start and several implemented features that might be useful, such as spam prevention using cooldowns, data storage and access using text files, and logging.
+The goal of Koduck is to give bot developers a quick start and several implemented features that might be useful, such as spam prevention using cooldowns, data storage and access using text files, and logging. Koduck was intended for providing info and stats from game data and not really for managing roles and other administrative things in large servers, but it could probably be tweaked to include those purposes.
 
 ## Features
 - Add bot commands easily!
@@ -15,13 +15,15 @@ The goal of Koduck is to give bot developers a quick start and several implement
 
 ## Requirements
 - Python 3.0 to 3.6 (discord.py does not work with 3.7+)
-- discord module (install with ``python -m pip install -U discord.py``)
+- discord.py 0.16.6 (v1+ is an overhaul and I'm too lazy to refactor code at the moment)
+  - install in command prompt with ``python -m pip install -U discord.py==0.16.6``
 - a Discord application (create one [here](https://discordapp.com/developers/applications/))
+  - turn it into a bot and take note of its token: it's basically its password
 - It would help a lot to have at least some experience programming in Python...
 
 ## Quick Setup
 - download/clone repository
-- in settings.txt, set token to your bot's token (turn your Discord application into a bot to generate a token)
+- in settings.txt, set token to your bot's token
 - in userlevels.txt, add a line which looks like this: ``userid\t3\n`` where \t is a tab, \n is a new line, and userid is your user id (right click yourself in Discord and click "Copy ID" - developer mode needs to be enabled for the option to show up)
 - open up a command prompt, change working directory to where Koduck is, run command ``python main.py``
 
@@ -53,7 +55,10 @@ A template that uses Koduck. It adds a bunch of basic commands like shutdown, re
 A Yadon table that stores details about commands.
 - The first column represents the text that will trigger the command
 - The second column represents the name of the function in main.py that will be called
-- The third column represents the type of trigger: prefix triggers if the message begins with the bot prefix + the trigger text (this type is the only type that supports having parameters), match triggers if the message matches the text exactly, contain triggers if the message contains the text
+- The third column represents the type of trigger:
+  - 'prefix' triggers if the message begins with the bot prefix + the trigger text (this type is the only type that supports having parameters)
+  - 'match' triggers if the message matches the text exactly
+  - 'contain' triggers if the message contains the text
 - The fourth column represents the minimum user level required to use this command
 
 Remember to add your commands to this table when you finish coding new command functions in main.py!
@@ -62,7 +67,7 @@ Remember to add your commands to this table when you finish coding new command f
 A Yadon table for storing custom settings for Koduck. Use this to store variables that you might want to be edited during bot runtime.
 - Any variables updated here (except token) can be updated during runtime with Koduck's updatesettings function
 - These settings overwrite settings in settings.py of the same name
-- The third column is an optional user level required to edit and remove the setting (defaults to 1, but remember that the editsetting and removesetting commands also have user level requirements)
+- The third column is an optional user level required to edit and remove the setting (defaults to 'maxuserlevel' defined in settings.py)
 
 ### userlevels.txt
 A yadon table for storing the authority levels of users. By default all users are level 1. Rows in this table determine otherwise. The first column represents the user id and the second column represents the user level.
