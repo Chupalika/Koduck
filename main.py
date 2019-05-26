@@ -163,7 +163,7 @@ async def customresponse(context, *args, **kwargs):
 async def addresponse(context, *args, **kwargs):
     if len(args) < 2:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_addresponse_noparam)
-    trigger = args[0]
+    trigger = args[0].lower()
     response = args[1]
     result = yadon.AppendRowToTable(settings.customresponsestablename, trigger, [response])
     if result == -1:
@@ -176,7 +176,7 @@ async def addresponse(context, *args, **kwargs):
 async def removeresponse(context, *args, **kwargs):
     if len(args) < 1:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_removeresponse_noparam)
-    trigger = args[0]
+    trigger = args[0].lower()
     result = yadon.RemoveRowFromTable(settings.customresponsestablename, trigger)
     if result == -1:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_removeresponse_failed.format(trigger))
