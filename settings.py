@@ -22,7 +22,7 @@ backgroundtask = None
 backgroundtaskinterval = 10
 
 restrictedmode = "false"
-channelwhitelisttablename	channelwhitelist
+channelwhitelisttablename = "channelwhitelist"
 
 #MESSAGES
 message_somethingbroke = "Something broke"
