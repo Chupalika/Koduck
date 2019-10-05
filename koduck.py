@@ -429,10 +429,10 @@ async def on_message(message):
         #CHECK PERMISSIONS OF USER
         userlevel = getuserlevel(message.author.id)
         if userlevel < commands[context["command"]][2]:
+            log(message, settings.message_restrictedaccess)
             #notify user of restricted access only if it's a prefix command
             if context["command"] in prefixcommands:
                 await sendmessage(message, sendcontent=settings.message_restrictedaccess)
-            log(None, settings.message_restrictedaccess)
             return
         
         log(message)
