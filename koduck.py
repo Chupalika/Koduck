@@ -137,8 +137,6 @@ async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembe
                 errors.append(("empty", "title", 0, 0))
             elif len(sendembed.title) > 256:
                 errors.append(("overflow", "title", len(sendembed.title), 256))
-        else:
-            errors.append(("empty", "title", 0, 0))
         
         #Embed description
         if sendembed.description != discord.Embed.Empty:
@@ -146,8 +144,6 @@ async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembe
                 errors.append(("empty", "description", 0, 0))
             if len(sendembed.description) > 2048:
                 errors.append(("overflow", "description", len(sendembed.description), 2048))
-        else:
-            errors.append(("empty", "description", 0, 0))
         
         #Embed footer
         if sendembed.footer.text != discord.Embed.Empty:
