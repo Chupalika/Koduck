@@ -2,6 +2,7 @@ botname	Koduck	2
 token	token
 logformat	%t\t%s\t%c\t%U\t%n\t%m\t%r
 customresponsestablename	customresponses
+helpmessagestablename	helpmessages
 message_sendmessage_noparam	I need two parameters: channelid and message
 message_updatesetting_noparam	I need a variable name and a value to update it to
 message_updatesetting_failed	That setting name doesn't seem to exist or you don't have permission to edit it
