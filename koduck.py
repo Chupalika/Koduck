@@ -379,6 +379,10 @@ async def on_message(message):
     if message.author.bot:
         return
     
+    #ignore messages not in whitelist
+    if getuserlevel(message.author.id) < settings.maxuserlevel and (settings.restrictedmode == "true" and message.channel.id not in yadon.ReadTable(settings.channelwhitelisttablename).keys()) and not message.channel.is_private:
+        return
+    
     try:
         #PARSE COMMAND AND PARAMS
         context, args, kwargs = {"message": message, "command": ""}, [], {}

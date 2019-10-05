@@ -21,6 +21,9 @@ outputhistorysize = 10
 backgroundtask = None
 backgroundtaskinterval = 10
 
+restrictedmode = "false"
+channelwhitelisttablename	channelwhitelist
+
 #MESSAGES
 message_somethingbroke = "Something broke"
 message_unknowncommand = "Command not recognized"
