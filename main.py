@@ -282,10 +282,10 @@ async def roll(context, *args, **kwargs):
 
 def gethelpmessage(messagename):
     if messagename:
-        helpmessage = yadon.ReadRowFromTable(settings.helpmessagestable, "message_help_" + messagename)
+        helpmessage = yadon.ReadRowFromTable(settings.helpmessagestablename, "message_help_" + messagename)
     #Default message if no parameter is given
     else:
-        helpmessage = yadon.ReadRowFromTable(settings.helpmessagestable, "message_help")
+        helpmessage = yadon.ReadRowFromTable(settings.helpmessagestablename, "message_help")
     
     #Use {cp} for command prefix and {pd} for parameter delimiter
     if helpmessage:
