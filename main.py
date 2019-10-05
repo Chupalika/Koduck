@@ -79,10 +79,10 @@ async def removesetting(context, *args, **kwargs):
 
 async def admin(context, *args, **kwargs):
     #need exactly one mentioned user (the order in the mentioned list is unreliable)
-    if len(context["message"].mentions) != 1:
+    if len(context["message"].raw_mentions) != 1:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_nomentioneduser)
     
-    userid = context["message"].mentions[0].id
+    userid = context["message"].raw_mentions[0]
     userlevel = koduck.getuserlevel(userid)
     
     #already an admin
@@ -94,10 +94,10 @@ async def admin(context, *args, **kwargs):
 
 async def unadmin(context, *args, **kwargs):
     #need exactly one mentioned user (the order in the mentioned list is unreliable)
-    if len(context["message"].mentions) != 1:
+    if len(context["message"].raw_mentions) != 1:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_nomentioneduser)
     
-    userid = context["message"].mentions[0].id
+    userid = context["message"].raw_mentions[0]
     userlevel = koduck.getuserlevel(userid)
     
     #not an admin
@@ -124,10 +124,10 @@ async def purge(context, *args, **kwargs):
 
 async def restrictuser(context, *args, **kwargs):
     #need exactly one mentioned user (the order in the mentioned list is unreliable)
-    if len(context["message"].mentions) != 1:
+    if len(context["message"].raw_mentions) != 1:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_nomentioneduser)
     
-    userid = context["message"].mentions[0].id
+    userid = context["message"].raw_mentions[0]
     userlevel = koduck.getuserlevel(userid)
     
     #already restricted
@@ -142,10 +142,10 @@ async def restrictuser(context, *args, **kwargs):
 
 async def unrestrictuser(context, *args, **kwargs):
     #need exactly one mentioned user (the order in the mentioned list is unreliable)
-    if len(context["message"].mentions) != 1:
+    if len(context["message"].raw_mentions) != 1:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_nomentioneduser)
     
-    userid = context["message"].mentions[0].id
+    userid = context["message"].raw_mentions[0]
     userlevel = koduck.getuserlevel(userid)
     
     if userlevel != 0:
@@ -230,13 +230,21 @@ async def help(context, *args, **kwargs):
             return await koduck.sendmessage(context["message"], sendcontent=settings.message_help_unknowncommand)
 
 async def userinfo(context, *args, **kwargs):
-    #if there is no mentioned user (apparently they have to be in the server to be considered "mentioned"), use the message sender instead
-    if context["message"].server is None:
-        user = context["message"].author
-    elif len(context["message"].mentions) == 0:
-        user = context["message"].server.get_member(context["message"].author.id)
-    elif len(context["message"].mentions) == 1:
-        user = context["message"].server.get_member(context["message"].mentions[0].id)
+    #if there is no mentioned user, use the message sender instead
+    if len(context["message"].raw_mentions) == 0:
+        if context["message"].server is None:
+            user = context["message"].author
+        else:
+            user = context["message"].server.get_member(context["message"].author.id)
+            if user is None:
+                user = context["message"].author
+    elif len(context["message"].raw_mentions) == 1:
+        if context["message"].server is None:
+            user = await koduck.client.get_user_info(context["message"].raw_mentions[0])
+        else:
+            user = context["message"].server.get_member(context["message"].raw_mentions[0])
+            if user is None:
+                user = await koduck.client.get_user_info(context["message"].raw_mentions[0])
     else:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_nomentioneduser2)
     
@@ -246,7 +254,7 @@ async def userinfo(context, *args, **kwargs):
     creationdate = user.created_at
     
     #these properties only appear in Member object (subclass of User) which is only available from Servers
-    if context["message"].server is not None:
+    if isinstance(user, discord.Member):
         game = user.game
         joindate = user.joined_at
         color = user.color
