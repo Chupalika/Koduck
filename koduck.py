@@ -125,7 +125,74 @@ async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembe
     
     #Discord messages cap at 2000 characters
     if len(sendcontent) > 2000:
-        sendcontent = settings.message_resulttoolong.format(len(sendcontent))
+        sendcontent = settings.message_resulttoolong.format(len(sendcontent), 2000)
+    
+    #Discord embeds also have a bunch of restrictions (not all are covered here)
+    if sendembed:
+        errors = []
+        
+        #Embed title
+        if sendembed.title != discord.Embed.Empty:
+            if len(sendembed.title) == 0:
+                errors.append(("empty", "title", 0, 0))
+            elif len(sendembed.title) > 256:
+                errors.append(("overflow", "title", len(sendembed.title), 256))
+        else:
+            errors.append(("empty", "title", 0, 0))
+        
+        #Embed description
+        if sendembed.description != discord.Embed.Empty:
+            if len(sendembed.description) == 0:
+                errors.append(("empty", "description", 0, 0))
+            if len(sendembed.description) > 2048:
+                errors.append(("overflow", "description", len(sendembed.description), 2048))
+        else:
+            errors.append(("empty", "description", 0, 0))
+        
+        #Embed footer
+        if sendembed.footer.text != discord.Embed.Empty:
+            if len(sendembed.footer.text) == 0:
+                errors.append(("empty", "footer.text", 0, 0))
+            elif len(sendembed.footer.text) > 2048:
+                errors.append(("overflow", "footer.text", sendembed.footer.text, 2048))
+        
+        #Embed author
+        if sendembed.author.name != discord.Embed.Empty:
+            if len(sendembed.author.name) == 0:
+                errors.append(("empty", "author.name", 0, 0))
+            elif len(sendembed.author.name) > 256:
+                errors.append(("overflow", "author.name", len(sendembed.author.name), 256))
+        
+        #Embed fields
+        if len(sendembed.fields) > 25:
+            errors.append(("overflow", "fields", len(sendembed.fields), 25))
+        for field in sendembed.fields:
+            if len(field.name) == 0:
+                errors.append(("empty", "field.name", 0, 0))
+                break
+            elif len(field.name) > 256:
+                errors.append(("overflow", "field.name", len(field.name), 256))
+                break
+            elif len(field.value) == 0:
+                errors.append(("empty", "field.value", 0, 0))
+                break
+            elif len(field.value) > 1024:
+                errors.append(("overflow", "field.value", len(field.value), 1024))
+                break
+        
+        #Embed total characters
+        totalcharacters = sum([len(x) for x in [sendembed.title, sendembed.description, sendembed.footer.text, sendembed.author.name] if x != discord.Embed.Empty]) + sum([len(field.name) + len(field.value) for field in sendembed.fields])
+        if totalcharacters > 6000:
+            errors.append(("overflow", "embed", totalcharacters, 6000))
+        
+        #Check collected errors
+        if len(errors) > 0:
+            if errors[0][0] == "empty":
+                sendcontent = settings.message_embedemptyfield.format(errors[0][1])
+                sendembed = None
+            elif errors[0][0] == "overflow":
+                sendcontent = settings.message_embedtoolong.format(errors[0][1], errors[0][2], errors[0][3])
+                sendembed = None
     
     #send the message and track some data
     THEmessage = await client.send_message(sendchannel, sendcontent, embed=sendembed)
