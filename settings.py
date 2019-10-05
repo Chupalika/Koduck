@@ -2,6 +2,7 @@
 commandstablename = "commands"
 settingstablename = "settings"
 userlevelstablename = "userlevels"
+helpmessagestablename = "helpmessages"
 logfile = "log.txt"
 formattedlogfile = "formattedlog.txt"
 

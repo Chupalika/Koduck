@@ -217,17 +217,12 @@ async def commands(context, *args, **kwargs):
     return await koduck.sendmessage(context["message"], sendcontent=output)
 
 async def help(context, *args, **kwargs):
-    #Default message if no parameter is given
-    if len(args) == 0:
-        return await koduck.sendmessage(context["message"], sendcontent=settings.message_help.replace("{cp}", settings.commandprefix).replace("{pd}", settings.paramdelim))
-    #Try to retrieve the help message for the query
-    else:
-        querycommand = args[0]
-        try:
-            #Use {cp} for command prefix and {pd} for parameter delimiter
-            return await koduck.sendmessage(context["message"], sendcontent=getattr(settings, "message_help_{}".format(querycommand)).replace("{cp}", settings.commandprefix).replace("{pd}", settings.paramdelim))
-        except AttributeError:
-            return await koduck.sendmessage(context["message"], sendcontent=settings.message_help_unknowncommand)
+    messagename = args[0] if len(args) > 0 else ""
+    helpmessage = gethelpmessage(messagename)
+    if not helpmessage:
+        helpmessage = gethelpmessage("unknowncommand")
+    if helpmessage:
+        return await koduck.sendmessage(context["message"], sendcontent=helpmessage)
 
 async def userinfo(context, *args, **kwargs):
     #if there is no mentioned user, use the message sender instead
@@ -284,6 +279,19 @@ async def roll(context, *args, **kwargs):
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_rollresult.format(context["message"].author.mention, random.randint(0, max)))
     else:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_rollresult.format(context["message"].author.mention, random.randint(max, 0)))
+
+def gethelpmessage(messagename):
+    if messagename:
+        helpmessage = yadon.ReadRowFromTable(settings.helpmessagestable, "message_help_" + messagename)
+    #Default message if no parameter is given
+    else:
+        helpmessage = yadon.ReadRowFromTable(settings.helpmessagestable, "message_help")
+    
+    #Use {cp} for command prefix and {pd} for parameter delimiter
+    if helpmessage:
+        return helpmessage[0].replace("{cp}", settings.commandprefix).replace("{pd}", settings.paramdelim).replace("\\n", "\n").replace("\\t", "\t")
+    else:
+        return None
 
 def setup():
     koduck.addcommand("updatecommands", updatecommands, "prefix", 3)
