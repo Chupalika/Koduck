@@ -198,13 +198,23 @@ async def oops(context, *args, **kwargs):
 
 async def commands(context, *args, **kwargs):
     #filter out the commands that the user doesn't have permission to run
+    #group the commands by function, multiple aliases for one function will be put in parentheses to indicate that fact to the user
     currentlevel = koduck.getuserlevel(context["message"].author.id)
-    availablecommands = []
-    for commandname in koduck.commands.keys():
-        command = koduck.commands[commandname]
+    availablecommands = {}
+    for commandname, command in koduck.commands.items():
         if command[2] <= currentlevel and command[1] == "prefix":
-            availablecommands.append(commandname)
-    return await koduck.sendmessage(context["message"], sendcontent=", ".join(availablecommands))
+            try:
+                availablecommands[command[0]].append(commandname)
+            except KeyError:
+                availablecommands[command[0]] = [commandname]
+    output = ""
+    for function, commandnames in availablecommands.items():
+        if len(commandnames) > 1:
+            output += "({}), ".format(", ".join(commandnames))
+        else:
+            output += "{}, ".format(commandnames[0])
+    output = output[:-2]
+    return await koduck.sendmessage(context["message"], sendcontent=output)
 
 async def help(context, *args, **kwargs):
     #Default message if no parameter is given
