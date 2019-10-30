@@ -40,10 +40,10 @@ def log(message=None, logresult=""):
     logresult = logresult.replace("\n", "\\n")
     
     if message is None:
-        timestamp = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
         
         #normal log file
-        logstring = "\t{}\t\t\t\t\t{}\n".format(timestamp, logresult)
+        logstring = "{}\t\t\t\t\t{}\n".format(timestamp, logresult)
         with open(settings.logfile, "a", encoding="utf8") as file:
             file.write(logstring)
         
@@ -55,7 +55,7 @@ def log(message=None, logresult=""):
     else:
         #determine some values
         logmessage = message.content.replace("\n", "\\n")
-        timestamp = message.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = message.timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")
         username = message.author.name
         discr = message.author.discriminator
         if message.server is not None:
@@ -70,7 +70,7 @@ def log(message=None, logresult=""):
             channelname = ""
         
         #normal log file
-        logstring = "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(message.id, timestamp, message.server.id if message.server is not None else "", message.channel.id if message.server is not None else "", message.author.id, logmessage, logresult)
+        logstring = "{}\t{}\t{}\t{}\t{}\t{}\n".format(timestamp, message.server.id if message.server is not None else "", message.channel.id if message.server is not None else "", message.author.id, logmessage, logresult)
         with open(settings.logfile, "a", encoding="utf8") as file:
             file.write(logstring)
         
