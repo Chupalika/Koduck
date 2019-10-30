@@ -27,7 +27,7 @@ channelwhitelisttablename = "channelwhitelist"
 #MESSAGES
 message_somethingbroke = "Something broke"
 message_unknowncommand = "Command not recognized"
-message_unhandlederror = "Unhandled error"
+message_unhandlederror = "Unhandled error ({})"
 message_resulttoolong = "Sorry, the result was too long to output ({}/{} characters)"
 message_embedtoolong = "Sorry, the embed was too long to output ({} {}/{} characters)"
 message_embedemptyfield = "The output embed was invalid ({} can't be empty)"

@@ -127,37 +127,26 @@ async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembe
     if len(sendcontent) > 2000:
         sendcontent = settings.message_resulttoolong.format(len(sendcontent), 2000)
     
-    #Discord embeds also have a bunch of restrictions (not all are covered here)
+    #Discord embed limits
+    #URL validation is not done here, but invalid URLs will cause a 400 error
     if sendembed:
         errors = []
         
         #Embed title
-        if sendembed.title != discord.Embed.Empty:
-            if len(sendembed.title) == 0:
-                errors.append(("empty", "title", 0, 0))
-            elif len(sendembed.title) > 256:
-                errors.append(("overflow", "title", len(sendembed.title), 256))
+        if sendembed.title != discord.Embed.Empty and len(sendembed.title) > 256:
+            errors.append(("overflow", "title", len(sendembed.title), 256))
         
         #Embed description
-        if sendembed.description != discord.Embed.Empty:
-            if len(sendembed.description) == 0:
-                errors.append(("empty", "description", 0, 0))
-            if len(sendembed.description) > 2048:
-                errors.append(("overflow", "description", len(sendembed.description), 2048))
+        if sendembed.description != discord.Embed.Empty and len(sendembed.description) > 2048:
+            errors.append(("overflow", "description", len(sendembed.description), 2048))
         
         #Embed footer
-        if sendembed.footer.text != discord.Embed.Empty:
-            if len(sendembed.footer.text) == 0:
-                errors.append(("empty", "footer.text", 0, 0))
-            elif len(sendembed.footer.text) > 2048:
-                errors.append(("overflow", "footer.text", sendembed.footer.text, 2048))
+        if sendembed.footer.text != discord.Embed.Empty and len(sendembed.footer.text) > 2048:
+            errors.append(("overflow", "footer.text", sendembed.footer.text, 2048))
         
         #Embed author
-        if sendembed.author.name != discord.Embed.Empty:
-            if len(sendembed.author.name) == 0:
-                errors.append(("empty", "author.name", 0, 0))
-            elif len(sendembed.author.name) > 256:
-                errors.append(("overflow", "author.name", len(sendembed.author.name), 256))
+        if sendembed.author.name != discord.Embed.Empty and len(sendembed.author.name) > 256:
+            errors.append(("overflow", "author.name", len(sendembed.author.name), 256))
         
         #Embed fields
         if len(sendembed.fields) > 25:
@@ -165,16 +154,12 @@ async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembe
         for field in sendembed.fields:
             if len(field.name) == 0:
                 errors.append(("empty", "field.name", 0, 0))
-                break
-            elif len(field.name) > 256:
+            if len(field.name) > 256:
                 errors.append(("overflow", "field.name", len(field.name), 256))
-                break
-            elif len(field.value) == 0:
+            if len(field.value) == 0:
                 errors.append(("empty", "field.value", 0, 0))
-                break
-            elif len(field.value) > 1024:
+            if len(field.value) > 1024:
                 errors.append(("overflow", "field.value", len(field.value), 1024))
-                break
         
         #Embed total characters
         totalcharacters = sum([len(x) for x in [sendembed.title, sendembed.description, sendembed.footer.text, sendembed.author.name] if x != discord.Embed.Empty]) + sum([len(field.name) + len(field.value) for field in sendembed.fields])
@@ -439,6 +424,8 @@ async def on_message(message):
             log(None, result)
     
     except Exception as e:
+        exc_type, exc_value, _ = sys.exc_info()
+        errormessage = "{}: {}".format(exc_type.__name__, exc_value)
         traceback.print_exc()
-        await sendmessage(message, sendcontent=settings.message_somethingbroke)
-        log(message, logresult=settings.message_unhandlederror)
+        await sendmessage(message, sendcontent=settings.message_somethingbroke + "\n``{}``".format(errormessage))
+        log(message, logresult=settings.message_unhandlederror.format(errormessage))
