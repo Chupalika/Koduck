@@ -133,36 +133,36 @@ async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembe
         errors = []
         
         #Embed title
-        if sendembed.title != discord.Embed.Empty and len(sendembed.title) > 256:
-            errors.append(("overflow", "title", len(sendembed.title), 256))
+        if sendembed.title != discord.Embed.Empty and len(str(sendembed.title)) > 256:
+            errors.append(("overflow", "title", len(str(sendembed.title)), 256))
         
         #Embed description
-        if sendembed.description != discord.Embed.Empty and len(sendembed.description) > 2048:
-            errors.append(("overflow", "description", len(sendembed.description), 2048))
+        if sendembed.description != discord.Embed.Empty and len(str(sendembed.description)) > 2048:
+            errors.append(("overflow", "description", len(str(sendembed.description)), 2048))
         
         #Embed footer
-        if sendembed.footer.text != discord.Embed.Empty and len(sendembed.footer.text) > 2048:
-            errors.append(("overflow", "footer.text", sendembed.footer.text, 2048))
+        if sendembed.footer.text != discord.Embed.Empty and len(str(sendembed.footer.text)) > 2048:
+            errors.append(("overflow", "footer.text", len(str(sendembed.footer.text)), 2048))
         
         #Embed author
-        if sendembed.author.name != discord.Embed.Empty and len(sendembed.author.name) > 256:
-            errors.append(("overflow", "author.name", len(sendembed.author.name), 256))
+        if sendembed.author.name != discord.Embed.Empty and len(str(sendembed.author.name)) > 256:
+            errors.append(("overflow", "author.name", len(str(sendembed.author.name)), 256))
         
         #Embed fields
         if len(sendembed.fields) > 25:
             errors.append(("overflow", "fields", len(sendembed.fields), 25))
         for field in sendembed.fields:
-            if len(field.name) == 0:
+            if len(str(field.name)) == 0:
                 errors.append(("empty", "field.name", 0, 0))
-            if len(field.name) > 256:
+            if len(str(field.name)) > 256:
                 errors.append(("overflow", "field.name", len(field.name), 256))
-            if len(field.value) == 0:
+            if len(str(field.value)) == 0:
                 errors.append(("empty", "field.value", 0, 0))
-            if len(field.value) > 1024:
+            if len(str(field.value)) > 1024:
                 errors.append(("overflow", "field.value", len(field.value), 1024))
         
         #Embed total characters
-        totalcharacters = sum([len(x) for x in [sendembed.title, sendembed.description, sendembed.footer.text, sendembed.author.name] if x != discord.Embed.Empty]) + sum([len(field.name) + len(field.value) for field in sendembed.fields])
+        totalcharacters = sum([len(x) for x in [str(sendembed.title), str(sendembed.description), str(sendembed.footer.text), str(sendembed.author.name)] if x != discord.Embed.Empty]) + sum([len(str(field.name)) + len(str(field.value)) for field in sendembed.fields])
         if totalcharacters > 6000:
             errors.append(("overflow", "embed", totalcharacters, 6000))
         
