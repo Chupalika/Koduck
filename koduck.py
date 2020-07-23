@@ -64,7 +64,7 @@ def log(message=None, logresult=""):
         else:
             servername = ""
             nickname = ""
-        if message.channel.name is not None:
+        if hasattr(message.channel, "name"):
             channelname = message.channel.name
         else:
             channelname = ""
