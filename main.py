@@ -29,16 +29,19 @@ async def shutdown(context, *args, **kwargs):
 async def sendmessage(context, *args, **kwargs):
     if len(args) < 2:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_sendmessage_noparam)
-    channelid = args[0]
+    try:
+        channelid = int(args[0])
+    except ValueError:
+        channelid = -1
     THEchannel = koduck.client.get_channel(channelid)
     THEmessagecontent = context["paramline"][context["paramline"].index(settings.paramdelim)+1:].strip()
     return await koduck.sendmessage(context["message"], sendchannel=THEchannel, sendcontent=THEmessagecontent, ignorecd=True)
 
 async def changestatus(context, *args, **kwargs):
     if len(args) < 1:
-        return await koduck.client.change_presence(game=discord.Game(name=""))
+        return await koduck.client.change_presence(activity=discord.Game(name=""))
     else:
-        return await koduck.client.change_presence(game=discord.Game(name=context["paramline"]))
+        return await koduck.client.change_presence(activity=discord.Game(name=context["paramline"]))
 
 async def updatesettings(context, *args, **kwargs):
     koduck.updatesettings()
@@ -115,11 +118,11 @@ async def purge(context, *args, **kwargs):
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_purge_invalidparam)
     
     counter = 0
-    async for message in koduck.client.logs_from(context["message"].channel, limit=settings.purgesearchlimit):
+    async for message in context["message"].channel.history(limit=settings.purgesearchlimit):
         if counter >= limit:
             break
         if message.author.id == koduck.client.user.id:
-            await koduck.client.delete_message(message)
+            await message.delete()
             counter += 1
 
 async def restrictuser(context, *args, **kwargs):
@@ -191,7 +194,7 @@ async def oops(context, *args, **kwargs):
     except (KeyError, IndexError):
         return settings.message_oops_failed
     try:
-        await koduck.client.delete_message(THEmessage)
+        await THEmessage.delete()
         return settings.message_oops_success
     except discord.errors.NotFound:
         return await oops(context, *args, **kwargs)
@@ -227,19 +230,19 @@ async def help(context, *args, **kwargs):
 async def userinfo(context, *args, **kwargs):
     #if there is no mentioned user, use the message sender instead
     if len(context["message"].raw_mentions) == 0:
-        if context["message"].server is None:
+        if context["message"].guild is None:
             user = context["message"].author
         else:
-            user = context["message"].server.get_member(context["message"].author.id)
+            user = context["message"].guild.get_member(context["message"].author.id)
             if user is None:
                 user = context["message"].author
     elif len(context["message"].raw_mentions) == 1:
-        if context["message"].server is None:
-            user = await koduck.client.get_user_info(context["message"].raw_mentions[0])
+        if context["message"].guild is None:
+            user = await koduck.client.get_user(context["message"].raw_mentions[0])
         else:
-            user = context["message"].server.get_member(context["message"].raw_mentions[0])
+            user = context["message"].guild.get_member(context["message"].raw_mentions[0])
             if user is None:
-                user = await koduck.client.get_user_info(context["message"].raw_mentions[0])
+                user = await koduck.client.get_user(context["message"].raw_mentions[0])
     else:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_nomentioneduser2)
     
@@ -250,13 +253,20 @@ async def userinfo(context, *args, **kwargs):
     
     #these properties only appear in Member object (subclass of User) which is only available from Servers
     if isinstance(user, discord.Member):
-        game = user.game
+        activities = user.activities
         joindate = user.joined_at
         color = user.color
-        if game is None:
+        if len(activities) == 0:
             embed = discord.Embed(title="{}#{}".format(username, discr), description=str(user.status), color=color)
         else:
-            embed = discord.Embed(title="{}#{}".format(username, discr), description="Playing {}".format(game.name), color=color)
+            desc = ""
+            for activity in activities:
+                if isinstance(activity, discord.CustomActivity):
+                    desc += "{}\n".format(activity)
+                else:
+                    typestring = {discord.ActivityType.playing: "Playing", discord.ActivityType.streaming: "Streaming", discord.ActivityType.listening: "Listening", discord.ActivityType.watching: "Watching", discord.ActivityType.unknown: "unknown"}[activity.type]
+                    desc += "{} {}\n".format(typestring, activity.name)
+            embed = discord.Embed(title="{}#{}".format(username, discr), description=desc, color=color)
         embed.add_field(name="Account creation date", value=creationdate.strftime("%Y-%m-%d %H:%M:%S UTC"), inline=False)
         embed.add_field(name="Server join date", value=joindate.strftime("%Y-%m-%d %H:%M:%S UTC"), inline=False)
         embed.set_thumbnail(url=avatar)
@@ -280,6 +290,9 @@ async def roll(context, *args, **kwargs):
     else:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_rollresult.format(context["message"].author.mention, random.randint(max, 0)))
 
+####################
+# HELPER FUNCTIONS #
+####################
 def gethelpmessage(messagename):
     if messagename:
         helpmessage = yadon.ReadRowFromTable(settings.helpmessagestablename, "message_help_" + messagename)
@@ -293,6 +306,9 @@ def gethelpmessage(messagename):
     else:
         return None
 
+#########
+# SETUP #
+#########
 def setup():
     koduck.addcommand("updatecommands", updatecommands, "prefix", 3)
 

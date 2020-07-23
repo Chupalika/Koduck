@@ -55,11 +55,11 @@ def log(message=None, logresult=""):
     else:
         #determine some values
         logmessage = message.content.replace("\n", "\\n")
-        timestamp = message.timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")
+        timestamp = message.created_at.strftime("%Y-%m-%d %H:%M:%S.%f")
         username = message.author.name
         discr = message.author.discriminator
-        if message.server is not None:
-            servername = message.server.name
+        if message.guild is not None:
+            servername = message.guild.name
             nickname = message.author.nick or ""
         else:
             servername = ""
@@ -70,7 +70,7 @@ def log(message=None, logresult=""):
             channelname = ""
         
         #normal log file
-        logstring = "{}\t{}\t{}\t{}\t{}\t{}\n".format(timestamp, message.server.id if message.server is not None else "", message.channel.id if message.server is not None else "", message.author.id, logmessage, logresult)
+        logstring = "{}\t{}\t{}\t{}\t{}\t{}\n".format(timestamp, message.guild.id if message.guild is not None else "", message.channel.id if message.guild is not None else "", message.author.id, logmessage, logresult)
         with open(settings.logfile, "a", encoding="utf8") as file:
             file.write(logstring)
         
@@ -109,7 +109,7 @@ async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembe
             userlastoutputs = outputhistory[receivemessage.author.id]
         if len(userlastoutputs) > 0:
             #calculate time since the last bot output from the user
-            TD = datetime.datetime.now() - userlastoutputs[-1].timestamp
+            TD = datetime.datetime.now() - userlastoutputs[-1].created_at
             usercooldown = 0
             while usercooldown == 0 and userlevel >= 0:
                 try:
@@ -176,7 +176,7 @@ async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembe
                 sendembed = None
     
     #send the message and track some data
-    THEmessage = await client.send_message(sendchannel, sendcontent, embed=sendembed)
+    THEmessage = await sendchannel.send(content=sendcontent, embed=sendembed)
     log(THEmessage)
     if receivemessage is not None:
         userlastoutputs.append(THEmessage)
@@ -316,7 +316,7 @@ def updateuserlevel(userid, level):
 
 def getuserlevel(userid):
     try:
-        return int(yadon.ReadRowFromTable(settings.userlevelstablename, userid)[0])
+        return int(yadon.ReadRowFromTable(settings.userlevelstablename, str(userid))[0])
     except (TypeError, IndexError, ValueError):
         return settings.defaultuserlevel
 
@@ -336,9 +336,9 @@ updatesettings()
 #background task is run every set interval while bot is running
 async def backgroundtask():
     await client.wait_until_ready()
-    while not client.is_closed:
+    while not client.is_closed():
         if client.user.bot and client.user.name != settings.botname:
-            await client.edit_profile(username=settings.botname)
+            await client.user.edit(username=settings.botname)
         if callable(settings.backgroundtask):
             client.loop.create_task(settings.backgroundtask())
         await asyncio.sleep(settings.backgroundtaskinterval)
