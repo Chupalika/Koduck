@@ -17,32 +17,35 @@ def ReadTable(tablename):
     except FileNotFoundError:
         return None
     
-    dict = OrderedDict()
+    table = OrderedDict()
     filecontents = file.read()
     for line in filecontents.split("\n"):
         if line == "":
             continue
         entries = line.split("\t")
         key = entries[0]
-        dict[key] = entries[1:]
+        table[key] = entries[1:]
     
-    return dict
+    return table
 
 #Reads a row from a table given a key and returns the list of values
 #Returns None if the table doesn't exist or the key doesn't exist in the table
 def ReadRowFromTable(tablename, key):
-    dict = ReadTable(tablename)
+    table = ReadTable(tablename)
     
-    if dict is None:
+    if table is None:
         return None
-    elif str(key) not in dict.keys():
+    elif str(key) not in table.keys():
         return None
     else:
-        return dict[str(key)]
+        return table[str(key)]
 
 #Writes a new table, or replaces a table if it exists already (use with caution!)
 #Use OrderedDict instead of a normal dict if ordering is important
-def WriteTable(tablename, dict):
+def WriteTable(tablename, table):
+    if not isinstance(table, dict):
+        raise TypeError("yadon.WriteTable: table parameter should be a dict")
+    
     #for safety measure
     old = ReadTable(tablename)
     
@@ -54,8 +57,8 @@ def WriteTable(tablename, dict):
     
     #For whatever reason if writing fails, write the old table back
     try:
-        for key in dict.keys():
-            values = [str(x) for x in dict[key]]
+        for key in table.keys():
+            values = [str(x) for x in table[key]]
             file.write("\t".join([str(key)] + values) + "\n")
         file.close()
     except Exception as e:
@@ -66,11 +69,14 @@ def WriteTable(tablename, dict):
 #Returns 0 if successful, -1 if not (key already exists)
 #Appends to text file instead of rewriting the whole file, which should be faster
 def AppendRowToTable(tablename, key, values):
-    dict = ReadTable(tablename)
+    if not isinstance(values, list):
+        raise TypeError("yadon.AppendRowToTable: values parameter should be a list")
     
-    if dict is None:
+    table = ReadTable(tablename)
+    
+    if table is None:
         WriteTable(tablename, {key:values})
-    elif str(key) in dict.keys():
+    elif str(key) in table.keys():
         return -1
     else:
         file = open("{}.txt".format(tablename), "a", encoding="utf8")
@@ -82,82 +88,88 @@ def AppendRowToTable(tablename, key, values):
 #Creates a new table if it doesn't exist yet
 #Replaces the row's values if the key already exists in the table
 def WriteRowToTable(tablename, key, values):
-    dict = ReadTable(tablename)
+    if not isinstance(values, list):
+        raise TypeError("yadon.WriteRowToTable: values parameter should be a list")
+    
+    table = ReadTable(tablename)
     
     #if table doesn't exist yet
-    if dict is None:
+    if table is None:
         WriteTable(tablename, {key:values})
     #if row doesn't exist in table yet
-    elif str(key) not in dict.keys():
+    elif str(key) not in table.keys():
         AppendRowToTable(tablename, key, values)
     else:
-        dict[str(key)] = values
-        WriteTable(tablename, dict)
+        table[str(key)] = values
+        WriteTable(tablename, table)
 
 #Appends a value to a row in a table
 #Creates a new table if it doesn't exist yet
 #Creates a new row if the key doesn't exist in the table yet
 def AppendValueToRow(tablename, key, value):
-    dict = ReadTable(tablename)
+    table = ReadTable(tablename)
     
     #if table doesn't exist yet
-    if dict is None:
+    if table is None:
         WriteTable(tablename, {key:[value]})
     #if row doesn't exist in table yet
-    elif str(key) not in dict.keys():
+    elif str(key) not in table.keys():
         AppendRowToTable(tablename, key, [value])
     else:
-        dict[str(key)].append(value)
-        WriteTable(tablename, dict)
+        table[str(key)].append(value)
+        WriteTable(tablename, table)
 
 #Appends a list of values to a row in a table
 #Creates a new table if it doesn't exist yet
 #Creates a new row if the key doesn't exist in the table yet
 def AppendValuesToRow(tablename, key, values):
-    dict = ReadTable(tablename)
+    if not isinstance(values, list):
+        raise TypeError("yadon.AppendValuesToRow: values parameter should be a list")
+    
+    table = ReadTable(tablename)
     
     #if table doesn't exist yet
-    if dict is None:
+    if table is None:
         WriteTable(tablename, {key:values})
     #if row doesn't exist in table yet
-    elif str(key) not in dict.keys():
+    elif str(key) not in table.keys():
         AppendRowToTable(tablename, key, values)
     else:
-        dict[str(key)] += values
-        WriteTable(tablename, dict)
+        table[str(key)] += values
+        WriteTable(tablename, table)
 
 #Removes a row from a table
 #Returns 0 if successful, -1 if not (nonexistent table or key)
 def RemoveRowFromTable(tablename, key):
-    dict = ReadTable(tablename)
+    table = ReadTable(tablename)
     
     #if table doesn't exist
-    if dict is None:
+    if table is None:
         return -1
     #if row doesn't exist in table
-    elif str(key) not in dict.keys():
+    elif str(key) not in table.keys():
         return -1
     else:
-        del dict[str(key)]
-        WriteTable(tablename, dict)
+        del table[str(key)]
+        WriteTable(tablename, table)
         return 0
 
 #Removes a value from a row in a table
 #If there are identical values in the row, the first one is removed
 #Returns 0 if successful, -1 if not (nonexistent table or key, or value not in row)
 def RemoveValueFromRow(tablename, key, value):
-    dict = ReadTable(tablename)
+    table = ReadTable(tablename)
     
     #if table doesn't exist
-    if dict is None:
+    if table is None:
         return -1
     #if row doesn't exist in table
-    elif str(key) not in dict.keys():
+    elif str(key) not in table.keys():
         return -1
     #if key doesn't exist in row
-    elif str(value) not in dict[str(key)]:
+    elif str(value) not in table[str(key)]:
         return -1
     else:
-        dict[str(key)].remove(str(value))
-        WriteTable(tablename, dict)
+        table[str(key)].remove(str(value))
+        WriteTable(tablename, table)
         return 0
