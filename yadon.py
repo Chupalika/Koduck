@@ -35,10 +35,10 @@ def ReadRowFromTable(tablename, key):
     
     if dict is None:
         return None
-    elif key not in dict.keys():
+    elif str(key) not in dict.keys():
         return None
     else:
-        return dict[key]
+        return dict[str(key)]
 
 #Writes a new table, or replaces a table if it exists already (use with caution!)
 #Use OrderedDict instead of a normal dict if ordering is important
@@ -55,8 +55,8 @@ def WriteTable(tablename, dict):
     #For whatever reason if writing fails, write the old table back
     try:
         for key in dict.keys():
-            values = dict[key]
-            file.write("\t".join([key] + values) + "\n")
+            values = [str(x) for x in dict[key]]
+            file.write("\t".join([str(key)] + values) + "\n")
         file.close()
     except Exception as e:
         WriteTable(tablename, old)
@@ -70,11 +70,11 @@ def AppendRowToTable(tablename, key, values):
     
     if dict is None:
         WriteTable(tablename, {key:values})
-    elif key in dict.keys():
+    elif str(key) in dict.keys():
         return -1
     else:
         file = open("{}.txt".format(tablename), "a", encoding="utf8")
-        file.write("\t".join([key] + values) + "\n")
+        file.write("\t".join([str(key)] + [str(x) for x in values]) + "\n")
         file.close()
         return 0
 
@@ -88,10 +88,10 @@ def WriteRowToTable(tablename, key, values):
     if dict is None:
         WriteTable(tablename, {key:values})
     #if row doesn't exist in table yet
-    elif key not in dict.keys():
+    elif str(key) not in dict.keys():
         AppendRowToTable(tablename, key, values)
     else:
-        dict[key] = values
+        dict[str(key)] = values
         WriteTable(tablename, dict)
 
 #Appends a value to a row in a table
@@ -104,10 +104,10 @@ def AppendValueToRow(tablename, key, value):
     if dict is None:
         WriteTable(tablename, {key:[value]})
     #if row doesn't exist in table yet
-    elif key not in dict.keys():
+    elif str(key) not in dict.keys():
         AppendRowToTable(tablename, key, [value])
     else:
-        dict[key].append(value)
+        dict[str(key)].append(value)
         WriteTable(tablename, dict)
 
 #Appends a list of values to a row in a table
@@ -120,10 +120,10 @@ def AppendValuesToRow(tablename, key, values):
     if dict is None:
         WriteTable(tablename, {key:values})
     #if row doesn't exist in table yet
-    elif key not in dict.keys():
+    elif str(key) not in dict.keys():
         AppendRowToTable(tablename, key, values)
     else:
-        dict[key] += values
+        dict[str(key)] += values
         WriteTable(tablename, dict)
 
 #Removes a row from a table
@@ -135,10 +135,10 @@ def RemoveRowFromTable(tablename, key):
     if dict is None:
         return -1
     #if row doesn't exist in table
-    elif key not in dict.keys():
+    elif str(key) not in dict.keys():
         return -1
     else:
-        del dict[key]
+        del dict[str(key)]
         WriteTable(tablename, dict)
         return 0
 
@@ -152,12 +152,12 @@ def RemoveValueFromRow(tablename, key, value):
     if dict is None:
         return -1
     #if row doesn't exist in table
-    elif key not in dict.keys():
+    elif str(key) not in dict.keys():
         return -1
     #if key doesn't exist in row
-    elif value not in dict[key]:
+    elif str(value) not in dict[str(key)]:
         return -1
     else:
-        dict[key].remove(value)
+        dict[str(key)].remove(str(value))
         WriteTable(tablename, dict)
         return 0
