@@ -1,7 +1,7 @@
 #BOT FILES
-commandstablename = "commands"
-settingstablename = "settings"
-userlevelstablename = "userlevels"
+commandstablename = "tables/commands"
+settingstablename = "tables/settings"
+userlevelstablename = "tables/userlevels"
 logfile = "log.txt"
 formattedlogfile = "formattedlog.txt"
 
@@ -22,7 +22,7 @@ backgroundtask = None
 backgroundtaskinterval = 10
 
 restrictedmode = "false"
-channelwhitelisttablename = "channelwhitelist"
+channelwhitelisttablename = "tables/channelwhitelist"
 
 #MESSAGES
 message_somethingbroke = "Something broke"
