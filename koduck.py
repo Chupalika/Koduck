@@ -11,7 +11,7 @@
 
 import discord
 import asyncio
-import sys, os, traceback
+import sys, os, traceback, re
 import datetime, pytz
 import settings, yadon
 
@@ -84,7 +84,8 @@ def log(message=None, logresult=""):
 #- sendchannel: the Discord Channel to send the message to; by default it's the channel where the triggering message was sent
 #- sendcontent: the String to include in the outgoing Discord Message
 #- sendembed: the Discord Embed to attach to the outgoing Discord Message
-async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembed=None, ignorecd=False):
+#- sendfile: a Discord File to include in the outgoing Discord Message (note: if this is not None, then sendembed is ignored)
+async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembed=None, sendfile=None, ignorecd=False):
     #If sendmessage was triggered by a user message, check cooldowns
     if receivemessage is not None:
         if sendchannel is None:
@@ -129,7 +130,7 @@ async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembe
     
     #Discord embed limits
     #URL validation is not done here, but invalid URLs will cause a 400 error
-    if sendembed:
+    if sendembed and not sendfile:
         errors = []
         
         #Embed title
@@ -176,7 +177,10 @@ async def sendmessage(receivemessage, sendchannel=None, sendcontent="", sendembe
                 sendembed = None
     
     #send the message and track some data
-    THEmessage = await sendchannel.send(content=sendcontent, embed=sendembed)
+    if not sendfile:
+        THEmessage = await sendchannel.send(content=sendcontent, embed=sendembed)
+    else:
+        THEmessage = await sendchannel.send(content=sendcontent, file=sendfile)
     log(THEmessage)
     if receivemessage is not None:
         userlastoutputs.append(THEmessage)
@@ -354,6 +358,8 @@ async def on_ready():
 ##############
 #INPUT OUTPUT#
 ##############
+#This is where messages come in, whether a command is triggered or not is checked, and parameters are parsed.
+#Note: don't use " \ or = as command prefix or param delim, since they are used in parsing, it'll mess stuff up.
 @client.event
 async def on_message(message):
     #ignore bot messages
@@ -374,21 +380,53 @@ async def on_message(message):
             try:
                 context["command"] = context["commandline"][0:context["commandline"].index(" ")].lower()
                 context["paramline"] = context["commandline"][context["commandline"].index(" ")+1:]
-                context["params"] = context["paramline"].split(settings.paramdelim)
+                context["params"] = []
             except ValueError:
                 context["command"] = context["commandline"].lower()
+                context["paramline"] = ""
                 context["params"] = []
-            for param in context["params"]:
-                if "=" in param:
-                    keyword = param[:param.index("=")].strip()
-                    value = param[param.index("=")+1:].strip()
-                    kwargs[keyword] = value
-                else:
-                    args.append(param.strip())
+            
             #Reset context if not a valid command
             if context["command"] not in prefixcommands:
                 log(message, logresult=settings.message_unknowncommand)
                 context, args, kwargs = {"message": message, "command": ""}, [], {}
+            
+            #Else parse params
+            else:
+                #Things within quotes should escape parsing
+                #Find things within quotes, replace them with a number (which shouldn't have param delim)
+                temp = context["paramline"]
+                quotes = []
+                quotematches = list(re.finditer(r'(["])(?:\\.|[^\\])*?\1', temp))
+                quotematches.reverse()
+                for quote in quotematches:
+                    start = quote.span()[0]
+                    end = quote.span()[1]
+                    temp = temp[0:start] + '"{}"'.format(len(quotes)) + temp[end:]
+                    quotes.append(quote.group())
+                
+                parsedparams = temp.split(settings.paramdelim)
+                
+                counter = len(quotes) - 1
+                #Put the quotes back in, without the quote marks themselves
+                def putquotesback(text, quotes, counter):
+                    ans = text
+                    while text.find('"{}"'.format(counter)) != -1 and counter >= 0:
+                        ans = ans.replace('"{}"'.format(counter), quotes[counter][1:-1], 1)
+                        counter -= 1
+                    return (ans, counter)
+                for param in parsedparams:
+                    #Find equal signs that aren't preceded by backslash
+                    equals = [match.span()[0] for match in filter(lambda match: match.span()[0] == 0 or param[match.span()[0]-1] != "\\", re.finditer(r'=', param))]
+                    if len(equals) > 0:
+                        keyword, counter = putquotesback(param[:param.index("=")].strip(), quotes, counter)
+                        value, counter = putquotesback(param[param.index("=")+1:].strip(), quotes, counter)
+                        kwargs[keyword] = value
+                        context["params"].append("{}={}".format(keyword, value))
+                    else:
+                        arg, counter = putquotesback(param.strip(), quotes, counter)
+                        args.append(arg)
+                        context["params"].append(arg)
         
         #MATCH COMMANDS
         if not context["command"]:
