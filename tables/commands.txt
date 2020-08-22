@@ -1,22 +1,23 @@
-updatecommands	updatecommands	prefix	3
-shutdown	shutdown	prefix	3
-sendmessage	sendmessage	prefix	3
-changestatus	changestatus	prefix	3
-updatesettings	updatesettings	prefix	3
-updatesetting	updatesetting	prefix	2
-addsetting	addsetting	prefix	2
-removesetting	removesetting	prefix	3
-admin	admin	prefix	3
-unadmin	unadmin	prefix	3
-purge	purge	prefix	3
-restrict	restrictuser	prefix	2
-unrestrict	unrestrictuser	prefix	2
-addresponse	addresponse	prefix	2
-removeresponse	removeresponse	prefix	2
-oops	oops	prefix	1
-commands	commands	prefix	1
-help	help	prefix	1
-userinfo	userinfo	prefix	1
-roll	roll	prefix	1
-\o\	customresponse	match	1
-/o/	customresponse	match	1
+updatecommands	main	updatecommands	prefix	3
+shutdown	main	shutdown	prefix	3
+sendmessage	main	sendmessage	prefix	3
+changestatus	main	changestatus	prefix	3
+updatesettings	main	updatesettings	prefix	3
+updatesetting	main	updatesetting	prefix	2
+addsetting	main	addsetting	prefix	2
+removesetting	main	removesetting	prefix	3
+admin	main	admin	prefix	3
+unadmin	main	unadmin	prefix	3
+purge	main	purge	prefix	3
+restrict	main	restrictuser	prefix	2
+unrestrict	main	unrestrictuser	prefix	2
+addresponse	main	addresponse	prefix	2
+removeresponse	main	removeresponse	prefix	2
+oops	main	oops	prefix	1
+commands	main	commands	prefix	1
+help	main	help	prefix	1
+userinfo	main	userinfo	prefix	1
+roll	main	roll	prefix	1
+\o\	main	customresponse	match	1
+/o/	main	customresponse	match	1
+hello	commands	world	prefix	3

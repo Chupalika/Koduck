@@ -1,7 +1,8 @@
+from koduck import Koduck 
 import discord
 import asyncio
-import sys, os, random
-import koduck, yadon
+import sys, os, random, importlib
+import yadon
 import settings
 
 #Background task is run every set interval while bot is running (by default every 10 seconds)
@@ -17,11 +18,24 @@ async def updatecommands(context, *args, **kwargs):
     tableitems = yadon.ReadTable(settings.commandstablename).items()
     if tableitems is not None:
         koduck.clearcommands()
-        for name, details in tableitems:
-            try:
-                koduck.addcommand(name, globals()[details[0]], details[1], int(details[2]))
-            except (KeyError, IndexError, ValueError):
-                pass
+        for commandname, details in tableitems:
+            modulename, functionname, commandtype, commandtier = details
+            
+            if modulename != "main":
+                if modulename not in sys.modules:
+                    try:
+                        importlib.import_module(modulename)
+                    except ModuleNotFoundError:
+                        pass
+                try:
+                    koduck.addcommand(commandname, getattr(sys.modules[modulename], functionname), commandtype, int(commandtier))
+                except (KeyError, IndexError, ValueError):
+                    pass
+            else:
+                try:
+                    koduck.addcommand(commandname, globals()[functionname], commandtype, int(commandtier))
+                except (KeyError, IndexError, ValueError):
+                    pass
 
 async def shutdown(context, *args, **kwargs):
     return await koduck.client.logout()
@@ -309,8 +323,6 @@ def gethelpmessage(messagename):
 #########
 # SETUP #
 #########
-def setup():
-    koduck.addcommand("updatecommands", updatecommands, "prefix", 3)
-
-setup()
+koduck = Koduck()
+koduck.addcommand("updatecommands", updatecommands, "prefix", 3)
 koduck.client.run(settings.token)
