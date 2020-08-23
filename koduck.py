@@ -315,10 +315,12 @@ class Koduck:
             return settings.defaultuserlevel
     
     #Run a command as if it was triggered by a Discord message
-    async def runcommand(self, command, message=None, params=[]):
+    async def runcommand(self, command, context=None, *args, **kwargs):
+        if context is None:
+            context = {"koduck": koduckinstance}
         try:
             function = self.commands[command][0]
-            return await function(message, params)
+            return await function(context, *args, **kwargs)
         except (KeyError, IndexError):
             return
     
@@ -425,6 +427,9 @@ async def on_message(message):
                     quotes.append(quote.group())
                 
                 parsedparams = temp.split(settings.paramdelim)
+                #Weird thing
+                if len(parsedparams) == 1 and parsedparams[0] == '':
+                    parsedparams = []
                 
                 counter = len(quotes) - 1
                 #Put the quotes back in, without the quote marks themselves
