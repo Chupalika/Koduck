@@ -101,32 +101,12 @@ class Koduck:
             if sendchannel is None:
                 sendchannel = receivemessage.channel
             
-            #Check channel cooldown
+            #Check cooldowns
             cooldownactive = False
             userlevel = self.getuserlevel(receivemessage.author.id)
             if userlevel < settings.ignorecdlevel:
-                #calculate time since the last bot output on this channel
-                try:
-                    TD = datetime.datetime.now() - self.lastmessageDT[sendchannel.id]
-                    cooldownactive = ((TD.microseconds / 1000) + (TD.seconds * 1000) < settings.channelcooldown)
-                except KeyError:
-                    pass
-            
-            try:
-                userlastoutputs = self.outputhistory[receivemessage.author.id]
-            except KeyError:
-                self.outputhistory[receivemessage.author.id] = []
-                userlastoutputs = self.outputhistory[receivemessage.author.id]
-            if len(userlastoutputs) > 0:
-                #calculate time since the last bot output from the user
-                TD = datetime.datetime.now() - userlastoutputs[-1].created_at
-                usercooldown = 0
-                while usercooldown == 0 and userlevel >= 0:
-                    try:
-                        usercooldown = getattr(settings, "usercooldown_{}".format(userlevel))
-                    except AttributeError:
-                        userlevel -= 1
-                cooldownactive = ((TD.microseconds / 1000) + (TD.seconds * 1000) < usercooldown) or cooldownactive
+                cooldownactive = self.checkchannelcooldown(sendchannel.id)
+            cooldownactive = cooldownactive or self.checkusercooldown(receivemessage.author.id)
             
             #ignore message if bot is on channel cooldown or user cooldown
             if cooldownactive and not ignorecd:
@@ -192,6 +172,7 @@ class Koduck:
             THEmessage = await sendchannel.send(content=sendcontent, file=sendfile)
         self.log(THEmessage)
         if receivemessage is not None:
+            userlastoutputs = self.getuserlastoutputs(receivemessage.author.id)
             userlastoutputs.append(THEmessage)
             self.outputhistory[receivemessage.author.id] = userlastoutputs[max(0,len(userlastoutputs)-settings.outputhistorysize):]
         self.lastmessageDT[sendchannel.id] = datetime.datetime.now()
@@ -340,6 +321,38 @@ class Koduck:
             return await function(message, params)
         except (KeyError, IndexError):
             return
+    
+    def checkchannelcooldown(self, channelid):
+        #calculate time since the last bot output on the given channel
+        try:
+            TD = datetime.datetime.now() - self.lastmessageDT[channelid]
+            return ((TD.microseconds / 1000) + (TD.seconds * 1000) < settings.channelcooldown)
+        except KeyError:
+            return False
+    
+    def checkusercooldown(self, userid):
+        userlevel = self.getuserlevel(userid)
+        userlastoutputs = self.getuserlastoutputs(userid)
+        if len(userlastoutputs) > 0:
+            #calculate time since the last bot output from the user
+            TD = datetime.datetime.now() - userlastoutputs[-1].created_at
+            usercooldown = 0
+            while usercooldown == 0 and userlevel >= 0:
+                try:
+                    usercooldown = getattr(settings, "usercooldown_{}".format(userlevel))
+                except AttributeError:
+                    userlevel -= 1
+            return ((TD.microseconds / 1000) + (TD.seconds * 1000) < usercooldown)
+        else:
+            return False
+
+    def getuserlastoutputs(self, userid):
+        try:
+            userlastoutputs = self.outputhistory[userid]
+        except KeyError:
+            self.outputhistory[userid] = []
+            userlastoutputs = self.outputhistory[userid]
+        return userlastoutputs
 
 #######
 #SETUP#
