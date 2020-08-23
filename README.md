@@ -5,6 +5,8 @@ Koduck is a Discord bot framework written in Python! Originally, I'd developed a
 
 The goal of Koduck is to give bot developers a quick start and several implemented features that might be useful, such as spam prevention using cooldowns, data storage and access using text files, and logging. Koduck was intended for providing info and stats from game data and not really for managing roles and other administrative things in large servers, but it could probably be tweaked to include those purposes. This also means that whoever hosts it doesn't have to be an admin of the server, rather, Koduck maintains its own admins. Of course, server admins would still be able to control the permissions of the Koduck bot itself, for example restricting it to view certain channels, but only Koduck admins will be able to control the behavior of Koduck.
 
+Note: I'm actually an idiot and realized really late (almost two years after I made this) that discord.py has a bot extension module with many features included, some of which overlaps Koduck like cooldowns. I still think Koduck has its niche, and besides, it's much simpler to learn and use :)
+
 ## Features
 - Add bot commands easily!
 - Authority levels - assign levels to users and commands to control who has access to which commands
@@ -14,17 +16,17 @@ The goal of Koduck is to give bot developers a quick start and several implement
 - Base command functions provided can be used as a guide for developing your own functions
 
 ## Requirements
-- Python 3.0 to 3.6 (discord.py does not work with 3.7+)
-- discord.py 0.16.6 (v1+ is an overhaul and I'm too lazy to refactor code at the moment)
-  - install in command prompt with ``python -m pip install discord.py==0.16.6``
+- Python 3.5.3+
+- discord.py 1.4.0+
+  - install in command prompt with ``python -m pip install discord.py``
 - a Discord application (create one [here](https://discordapp.com/developers/applications/))
   - turn it into a bot and take note of its token: it's basically its password
 - It would help a lot to have at least some experience programming in Python...
 
 ## Quick Setup
 - download/clone repository
-- in settings.txt, set token to your bot's token
-- in userlevels.txt, add a line which looks like this: ``userid\t3\n`` where \t is a tab, \n is a new line, and userid is your user id (right click yourself in Discord and click "Copy ID" - developer mode needs to be enabled for the option to show up)
+- in tables/settings.txt, set token to your bot's token
+- in tables/userlevels.txt, add a line which looks like this: ``userid\t3\n`` where \t is a tab, \n is a new line, and userid is your user id (right click yourself in Discord and click "Copy ID" - developer mode needs to be enabled for the option to show up)
 - open up a command prompt, change working directory to where Koduck is, run command ``python main.py``
 
 ## Included Files
@@ -42,8 +44,9 @@ Provides tools for reading and writing data to and from text files in TSV table 
 - Although Koduck uses a few Yadon tables to help it operate, it needs to store the data read from the settings and commands tables, which means they don't update values on the fly if edited manually. That's why there are update command functions provided in main.py.
 
 ### main.py
-A template that uses Koduck. It adds a bunch of basic commands like shutdown, restrictuser, and userinfo. Use them as a guide to add your own commands, and feel free to remove any functions you don't need. Note that each command function should use the signature (context, \*arg, \*\*kwargs). An example of a prefix command might look like this: ``/stage Psyduck, option=shorthand``
+The main script to start up Koduck. It also includes a bunch of basic commands like shutdown, restrictuser, and userinfo. Use them as a guide to add your own commands, and feel free to remove any functions you don't need. Note that each command function should use the signature (context, \*arg, \*\*kwargs). An example of a prefix command might look like this: ``/stage Psyduck, option=shorthand``
 * context will contain:
+  * 'koduck' is the Koduck instance for accessing its methods like sendmessage
   * 'message' is the Discord.Message object that triggered the command
   * 'command' is the trigger text ('stage')
   * 'commandline' is the message text except for the prefix ('stage Psyduck, option=shorthand')
@@ -51,17 +54,21 @@ A template that uses Koduck. It adds a bunch of basic commands like shutdown, re
   * 'paramline' is the message text except for the prefix and command ('Psyduck, option=shorthand')
 * \*args is a list of the unnamed parameters (\['Psyduck'\]) and \*\*kwargs is a dict of the named parameters ({'option':'shorthand'})
 
+### commands.py
+This file is an example of how you can implement your own commands in a separate module.
+
 ### commands.txt
 A Yadon table that stores details about commands.
 - The first column represents the text that will trigger the command
-- The second column represents the name of the function in main.py that will be called
-- The third column represents the type of trigger:
+- The second column represents the name of the module where the function is defined
+- The third column represents the name of the function in the module that will be called
+- The fourth column represents the type of trigger:
   - 'prefix' triggers if the message begins with the bot prefix + the trigger text (this type is the only type that supports having parameters)
   - 'match' triggers if the message matches the text exactly
   - 'contain' triggers if the message contains the text
-- The fourth column represents the minimum user level required to use this command
+- The fifth column represents the minimum user level required to use this command
 
-Remember to add your commands to this table when you finish coding new command functions in main.py!
+Remember to add your commands to this table when you finish coding new command functions!
 
 ### settings.txt
 A Yadon table for storing custom settings for Koduck. Use this to store variables that you might want to be edited during bot runtime.
