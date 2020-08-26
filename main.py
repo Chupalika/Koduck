@@ -252,11 +252,11 @@ async def userinfo(context, *args, **kwargs):
                 user = context["message"].author
     elif len(context["message"].raw_mentions) == 1:
         if context["message"].guild is None:
-            user = await koduck.client.get_user(context["message"].raw_mentions[0])
+            user = await koduck.client.fetch_user(context["message"].raw_mentions[0])
         else:
             user = context["message"].guild.get_member(context["message"].raw_mentions[0])
             if user is None:
-                user = await koduck.client.get_user(context["message"].raw_mentions[0])
+                user = await koduck.client.fetch_user(context["message"].raw_mentions[0])
     else:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_nomentioneduser2)
     
