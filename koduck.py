@@ -357,6 +357,18 @@ class Koduck:
             userlastoutputs = self.outputhistory[userid]
         return userlastoutputs
 
+class KoduckContext:
+    koduck = None
+    message = None
+    command = ""
+    commandline = ""
+    paramline = ""
+    params = []
+    
+    #Allows subscriptable (i.e. context["message"] and context.message both work)
+    def __getitem__(self, item):
+        return getattr(self, item)
+
 #######
 #SETUP#
 #######
@@ -394,30 +406,29 @@ async def on_message(message):
     
     try:
         #PARSE COMMAND AND PARAMS
-        context, args, kwargs = {"koduck": koduckinstance, "message": message, "command": ""}, [], {}
+        context, args, kwargs = KoduckContext(), [], {}
+        context.message = message
         
         #PREFIX COMMANDS
         if message.content.startswith(settings.commandprefix):
-            context["commandline"] = message.content[len(settings.commandprefix):]
+            context.commandline = message.content[len(settings.commandprefix):]
             try:
-                context["command"] = context["commandline"][0:context["commandline"].index(" ")].lower()
-                context["paramline"] = context["commandline"][context["commandline"].index(" ")+1:]
-                context["params"] = []
+                context.command = context.commandline[0:context.commandline.index(" ")].lower()
+                context.paramline = context.commandline[context.commandline.index(" ")+1:]
             except ValueError:
-                context["command"] = context["commandline"].lower()
-                context["paramline"] = ""
-                context["params"] = []
+                context.command = context.commandline.lower()
             
             #Reset context if not a valid command
-            if context["command"] not in koduckinstance.prefixcommands:
+            if context.command not in koduckinstance.prefixcommands:
                 koduckinstance.log(message, logresult=settings.message_unknowncommand)
-                context, args, kwargs = {"message": message, "command": ""}, [], {}
+                context, args, kwargs = KoduckContext(), [], {}
+                context.message = message
             
             #Else parse params
             else:
                 #Things within quotes should escape parsing
                 #Find things within quotes, replace them with a number (which shouldn't have param delim)
-                temp = context["paramline"]
+                temp = context.paramline
                 quotes = []
                 quotematches = list(re.finditer(r'(["])(?:\\.|[^\\])*?\1', temp))
                 quotematches.reverse()
@@ -447,41 +458,41 @@ async def on_message(message):
                         keyword, counter = putquotesback(param[:param.index("=")].strip(), quotes, counter)
                         value, counter = putquotesback(param[param.index("=")+1:].strip(), quotes, counter)
                         kwargs[keyword] = value
-                        context["params"].append("{}={}".format(keyword, value))
+                        context.params.append("{}={}".format(keyword, value))
                     else:
                         arg, counter = putquotesback(param.strip(), quotes, counter)
                         args.append(arg)
-                        context["params"].append(arg)
+                        context.params.append(arg)
         
         #MATCH COMMANDS
-        if not context["command"]:
+        if not context.command:
             for commandname in koduckinstance.matchcommands:
                 if commandname == message.content.lower():
-                    context["command"] = commandname
+                    context.command = commandname
                     break
         
         #CONTAIN COMMANDS
-        if not context["command"]:
+        if not context.command:
             for commandname in koduckinstance.containcommands:
                 if commandname in message.content.lower():
-                    context["command"] = commandname
+                    context.command = commandname
                     break
         
-        if not context["command"]:
+        if not context.command:
             return
         
         #CHECK PERMISSIONS OF USER
         userlevel = koduckinstance.getuserlevel(message.author.id)
-        if userlevel < koduckinstance.commands[context["command"]][2]:
+        if userlevel < koduckinstance.commands[context.command][2]:
             koduckinstance.log(message, settings.message_restrictedaccess)
             #notify user of restricted access only if it's a prefix command
-            if context["command"] in koduckinstance.prefixcommands:
+            if context.command in koduckinstance.prefixcommands:
                 await koduckinstance.sendmessage(message, sendcontent=settings.message_restrictedaccess)
             return
         
         koduckinstance.log(message)
         #RUN THE COMMAND
-        function = koduckinstance.commands[context["command"]][0]
+        function = koduckinstance.commands[context.command][0]
         result = await function(context, *args, **kwargs)
         if isinstance(result, str):
             koduckinstance.log(None, result)
