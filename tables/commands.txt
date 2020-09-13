@@ -1,3 +1,4 @@
+HEADER	Module Name	Method Name	Command Type	Command Tier
 updatecommands	main	updatecommands	prefix	3
 shutdown	main	shutdown	prefix	3
 sendmessage	main	sendmessage	prefix	3

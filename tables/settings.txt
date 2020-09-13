@@ -1,3 +1,4 @@
+HEADER	Value	Tier
 botname	Koduck	2
 token	token
 logformat	%t\t%s\t%c\t%U\t%n\t%m\t%r
