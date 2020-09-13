@@ -95,7 +95,8 @@ class Koduck:
     #- sendcontent: the String to include in the outgoing Discord Message
     #- sendembed: the Discord Embed to attach to the outgoing Discord Message
     #- sendfile: a Discord File to include in the outgoing Discord Message (note: if this is not None, then sendembed is ignored)
-    async def sendmessage(self, receivemessage, sendchannel=None, sendcontent="", sendembed=None, sendfile=None, ignorecd=False):
+    #- ignorecd: set this to True to ignore cooldown checks
+    async def sendmessage(self, receivemessage=None, sendchannel=None, sendcontent="", sendembed=None, sendfile=None, ignorecd=False):
         #If sendmessage was triggered by a user message, check cooldowns
         if receivemessage is not None:
             if sendchannel is None:
