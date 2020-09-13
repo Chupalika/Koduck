@@ -214,11 +214,12 @@ class Koduck:
     #token can only be updated by restarting the bot
     #botname is updated in the background task, so it won't update immediately
     #Note: settings is a module with attributes, so removing a setting manually from the table doesn't actually remove the attribute
+    #Note: number values will be converted to int/float, and string values will convert "\n"s and "\t"s
     def updatesettings(self):
-        table = yadon.ReadTable(settings.settingstablename)
-        for key, values in table.items():
+        table = yadon.ReadTable(settings.settingstablename, named_columns=True)
+        for key, setting in table.items():
             try:
-                value = values[0]
+                value = setting["Value"]
                 #try to convert into float or int, otherwise treat as string
                 try:
                     if float(value) % 1 == 0:
@@ -240,14 +241,14 @@ class Koduck:
             return
         
         try:
-            settinglevel = int(yadon.ReadRowFromTable(settings.settingstablename, variable)[1])
+            settinglevel = int(yadon.ReadRowFromTable(settings.settingstablename, variable, named_columns=True)["Tier"])
         except (IndexError, ValueError, TypeError):
             settinglevel = settings.maxuserlevel
         if settinglevel > authlevel:
             return
         
         value = value.replace("\n", "\\n").replace("\t", "\\t")
-        yadon.WriteRowToTable(settings.settingstablename, variable, [value, str(settinglevel)])
+        yadon.WriteRowToTable(settings.settingstablename, variable, {"Value": value, "Tier": settinglevel}, named_columns=True)
         try:
             if float(value) % 1 == 0:
                 value = int(value)
@@ -268,7 +269,7 @@ class Koduck:
             pass
         
         value = value.replace("\n", "\\n").replace("\t", "\\t")
-        yadon.WriteRowToTable(settings.settingstablename, variable, [value, str(authlevel)])
+        yadon.WriteRowToTable(settings.settingstablename, variable, {"Value": value, "Tier": authlevel}, named_columns=True)
         try:
             if float(value) % 1 == 0:
                 value = int(value)
@@ -288,13 +289,13 @@ class Koduck:
             return
         
         try:
-            settinglevel = int(yadon.ReadRowFromTable(settings.settingstablename, variable)[1])
+            settinglevel = int(yadon.ReadRowFromTable(settings.settingstablename, variable, named_columns=True)["Tier"])
         except (IndexError, ValueError):
             settinglevel = settings.maxuserlevel
         if settinglevel > authlevel:
             return
         
-        yadon.RemoveRowFromTable(settings.settingstablename, variable)
+        yadon.RemoveRowFromTable(settings.settingstablename, variable, named_columns=True)
         delattr(settings, variable)
         return value
     
@@ -407,6 +408,7 @@ async def on_message(message):
     try:
         #PARSE COMMAND AND PARAMS
         context, args, kwargs = KoduckContext(), [], {}
+        context.koduck = koduckinstance
         context.message = message
         
         #PREFIX COMMANDS

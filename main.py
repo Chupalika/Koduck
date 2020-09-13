@@ -1,7 +1,7 @@
 from koduck import Koduck 
 import discord
 import asyncio
-import sys, os, random, importlib
+import sys, random, importlib
 import yadon
 import settings
 
@@ -19,23 +19,21 @@ async def updatecommands(context, *args, **kwargs):
     if tableitems is not None:
         koduck.clearcommands()
         for commandname, details in tableitems:
-            modulename, functionname, commandtype, commandtier = details
-            
-            if modulename != "main":
-                if modulename not in sys.modules:
+            if details["Module Name"] != "main":
+                if details["Module Name"] not in sys.modules:
                     try:
-                        importlib.import_module(modulename)
+                        importlib.import_module(details["Module Name"])
                     except ModuleNotFoundError:
                         pass
                 try:
-                    koduck.addcommand(commandname, getattr(sys.modules[modulename], functionname), commandtype, int(commandtier))
+                    koduck.addcommand(commandname, getattr(sys.modules[details["Module Name"]], details["Method Name"]), details["Command Type"], int(details["Command Tier"]))
                 except (KeyError, IndexError, ValueError):
-                    pass
+                    print("Failed to import command: {}".format(details))
             else:
                 try:
-                    koduck.addcommand(commandname, globals()[functionname], commandtype, int(commandtier))
+                    koduck.addcommand(commandname, globals()[details["Method Name"]], details["Command Type"], int(details["Command Tier"]))
                 except (KeyError, IndexError, ValueError):
-                    pass
+                    print("Failed to import command: {}".format(details))
 
 async def shutdown(context, *args, **kwargs):
     return await koduck.client.logout()
