@@ -15,7 +15,7 @@ settings.backgroundtask = backgroundtask
 ##################
 #Be careful not to leave out this command or else a restart might be needed for any updates to commands
 async def updatecommands(context, *args, **kwargs):
-    tableitems = yadon.ReadTable(settings.commandstablename).items()
+    tableitems = yadon.ReadTable(settings.commandstablename, named_columns=True).items()
     if tableitems is not None:
         koduck.clearcommands()
         for commandname, details in tableitems:
