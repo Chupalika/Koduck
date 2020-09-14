@@ -359,12 +359,13 @@ class Koduck:
         return userlastoutputs
 
 class KoduckContext:
-    koduck = None
-    message = None
-    command = ""
-    commandline = ""
-    paramline = ""
-    params = []
+    def __init__(self):
+        self.koduck = None
+        self.message = None
+        self.command = ""
+        self.commandline = ""
+        self.paramline = ""
+        self.params = []
     
     #Allows subscriptable (i.e. context["message"] and context.message both work)
     def __getitem__(self, item):
