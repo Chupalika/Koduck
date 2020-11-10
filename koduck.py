@@ -15,7 +15,10 @@ import sys, os, traceback, re
 import datetime, pytz
 import settings, yadon
 
-client = discord.Client()
+intents = discord.Intents.default()
+intents.members = True
+intents.presences = True
+client = discord.Client(intents=intents)
 koduckinstance = None
 
 class Koduck:
