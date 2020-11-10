@@ -179,7 +179,7 @@ async def addresponse(context, *args, **kwargs):
     if len(args) < 2:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_addresponse_noparam)
     trigger = args[0].lower()
-    response = args[1]
+    response = context["paramline"][context["paramline"].index(settings.paramdelim)+1:].strip()
     result = yadon.AppendRowToTable(settings.customresponsestablename, trigger, [response])
     if result == -1:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_addresponse_failed)
@@ -250,11 +250,11 @@ async def userinfo(context, *args, **kwargs):
                 user = context["message"].author
     elif len(context["message"].raw_mentions) == 1:
         if context["message"].guild is None:
-            user = await koduck.client.fetch_user(context["message"].raw_mentions[0])
+            user = koduck.client.get_user(context["message"].raw_mentions[0])
         else:
             user = context["message"].guild.get_member(context["message"].raw_mentions[0])
             if user is None:
-                user = await koduck.client.fetch_user(context["message"].raw_mentions[0])
+                user = koduck.client.get_user(context["message"].raw_mentions[0])
     else:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_nomentioneduser2)
     
