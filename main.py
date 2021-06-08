@@ -184,7 +184,7 @@ async def addresponse(context, *args, **kwargs):
     if result == -1:
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_addresponse_failed)
     else:
-        yadon.WriteRowToTable(settings.commandstablename, trigger, ["customresponse", "match", "1"])
+        yadon.WriteRowToTable(settings.commandstablename, trigger, ["main", "customresponse", "match", "1"])
         koduck.addcommand(trigger, customresponse, "match", 1)
         return await koduck.sendmessage(context["message"], sendcontent=settings.message_addresponse_success.format(trigger, response))
 
