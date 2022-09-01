@@ -26,7 +26,7 @@ For those interested - Originally, I had developed a bot named [KoduckBot](https
 ## Requirements
 - Python 3.10+
 - discord.py 2.0+
-  - install in command prompt with `python -m pip install git+https://github.com/Rapptz/discord.py`
+  - install in command prompt with `python -m pip install -U discord.py`
 - a Discord application (create one [here](https://discordapp.com/developers/applications/))
   - turn it into a bot and take note of its token: it's basically its password
 - It would help a lot to have at least some experience programming in Python...
