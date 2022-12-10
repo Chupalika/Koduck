@@ -14,17 +14,17 @@ async def refresh_commands(context, *args, **kwargs):
                 if details["Module Name"] not in sys.modules:
                     try:
                         importlib.import_module(details["Module Name"])
-                    except ModuleNotFoundError:
-                        errors.append("Failed to import module: {}".format(details["Module Name"]))
+                    except Exception as e:
+                        errors.append("Failed to import module '{}': `{}`".format(details["Module Name"], str(e)))
                 try:
                     context.koduck.add_command(command_name, getattr(sys.modules[details["Module Name"]], details["Method Name"]), details["Command Type"], int(details["Command Tier"]), details["Description"])
-                except (KeyError, IndexError, ValueError, AttributeError):
-                    errors.append("Failed to import command: {}".format(details))
+                except Exception as e:
+                    errors.append("Failed to import command '{}': `{}`".format(details, str(e)))
             else:
                 try:
                     context.koduck.add_command(command_name, globals()[details["Method Name"]], details["Command Type"], int(details["Command Tier"]), details["Description"])
-                except (KeyError, IndexError, ValueError, AttributeError):
-                    errors.append("Failed to import command: {}".format(details))
+                except Exception as e:
+                    errors.append("Failed to import command '{}': `{}`".format(details, str(e)))
     if settings.enable_run_command:
         context.koduck.add_run_slash_command()
     
@@ -43,7 +43,7 @@ async def background_task(koduck_instance):
 settings.background_task = background_task
 
 koduck = Koduck()
-koduck.add_command("refresh_commands", refresh_commands, "prefix", 3)
+koduck.add_command("refreshcommands", refresh_commands, "prefix", 3)
 if settings.enable_debug_logger:
     log_handler = logging.FileHandler(filename=settings.debug_log_file_name, encoding='utf-8', mode='w')
     koduck.client.run(settings.token, log_handler=log_handler, log_level=logging.DEBUG)

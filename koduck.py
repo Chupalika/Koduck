@@ -14,7 +14,7 @@ import asyncio
 import settings, yadon
 import sys, re
 import datetime, functools, traceback
-from typing import Optional
+from typing import Optional, Union
 
 class ClientWithBackgroundTask(discord.Client):
     async def setup_hook(self):
@@ -124,22 +124,24 @@ class Koduck:
             file.write(log_string)
     
     #Sends a Discord Message to a Discord Channel, possibly including a Discord Embed. Returns the Message object or a string if sending failed (i.e. cooldown is active)
-    #- receive_message: the Discord Message that triggered the activity (can be None)
+    #- receive_message: the Discord Message or Interaction that triggered the activity (can be None)
     #- channel: the Discord Channel to send the message to; by default it's the channel where the triggering message was sent
     #- content: the String to include in the outgoing Discord Message
     #- embed: the Discord Embed to attach to the outgoing Discord Message
     #- file: a Discord File to include in the outgoing Discord Message
     #- view: a Discord View to include in the outgoing Discord Message
     #- ignore_cd: set this to True to ignore cooldown checks
-    async def send_message(self, receive_message: Optional[discord.Message] = None, channel: Optional[discord.abc.Messageable] = None, ignore_cd: bool = False, **kwargs):
+    async def send_message(self, receive_message: Optional[Union[discord.Message, discord.Interaction]] = None, channel: Optional[discord.abc.Messageable] = None, ignore_cd: bool = False, **kwargs):
         content = kwargs["content"] if "content" in kwargs else ""
         embed = kwargs["embed"] if "embed" in kwargs else None
+        send_channel = channel
+        
+        if isinstance(receive_message, discord.Interaction):
+            send_channel = receive_message.channel
         #If send_message was triggered by a user message, check cooldowns
-        if receive_message is not None:
+        elif receive_message is not None:
             if channel is None:
                 send_channel = receive_message.channel
-            else:
-                send_channel = channel
             
             #Check cooldowns
             cooldown_active = False
@@ -153,19 +155,29 @@ class Koduck:
                 self.log(type="cooldown", extra=settings.message_cooldown_active)
                 return
         
-        #send the message and track some data
+        #send message to a "/run" interaction
         if isinstance(receive_message, SlashMessage) and channel is None:
             if not receive_message.interaction.response.is_done():
                 #This is not returning the sent message for some reason
                 the_message = await receive_message.interaction.response.send_message(**kwargs)
             else:
                 the_message = await receive_message.interaction.followup.send(**kwargs)
+        #send message to an interaction
+        elif isinstance(receive_message, discord.Interaction) and channel is None:
+            if not receive_message.response.is_done():
+                the_message = await receive_message.response.send_message(**kwargs)
+            else:
+                the_message = await receive_message.followup.send(**kwargs)
+        #send message normally
         else:
             the_message = await send_channel.send(**kwargs)
+        
+        #track user outputs
         if receive_message is not None and the_message is not None:
-            user_last_outputs = self.get_user_last_outputs(receive_message.author.id)
+            user_id = receive_message.user.id if isinstance(receive_message, discord.Interaction) else receive_message.author.id
+            user_last_outputs = self.get_user_last_outputs(user_id)
             user_last_outputs.append(the_message)
-            self.output_history[receive_message.author.id] = user_last_outputs[max(0,len(user_last_outputs)-settings.output_history_size):]
+            self.output_history[user_id] = user_last_outputs[max(0,len(user_last_outputs)-settings.output_history_size):]
         self.last_message_DT[send_channel.id] = datetime.datetime.now()
         
         return the_message
@@ -191,7 +203,18 @@ class Koduck:
                 interaction.command.koduck.log(type="interaction_user", interaction=interaction)
                 if interaction.command.koduck.get_user_level(interaction.user.id) < interaction.command.command_tier:
                     return await interaction.response.send_message(content=settings.message_restricted_access)
-                return await function(interaction, **kwargs)
+                try:
+                    return await function(interaction, **kwargs)
+                except Exception as e:
+                    exc_type, exc_value, _ = sys.exc_info()
+                    error_message = "{}: {}".format(exc_type.__name__, exc_value)
+                    traceback.print_exc()
+                    if interaction.response.is_done():
+                        await interaction.followup.send(content=settings.message_something_broke + "\n``{}``".format(error_message))
+                    else:
+                        await interaction.response.send_message(content=settings.message_something_broke + "\n``{}``".format(error_message))
+                    koduck_instance.log(type="command_error", extra=settings.message_unhandled_error.format(error_message))
+                    
             functools.update_wrapper(wrapper_function, function)
             
             app_command = discord.app_commands.Command(name=command_name, description=description, callback=wrapper_function)
@@ -446,12 +469,7 @@ async def on_ready():
     print("Bot online!")
     print("Name: {}".format(client.user.name))
     print("ID: {}".format(client.user.id))
-    await koduck_instance.run_command("refresh_commands")
-
-#Attempt to join threads so that the bot can be used there too
-@client.event
-async def on_thread_create(thread):
-    await thread.join()
+    await koduck_instance.run_command("refreshcommands")
 
 #Log some events from self
 @client.event
@@ -597,5 +615,5 @@ async def on_message(message):
         exc_type, exc_value, _ = sys.exc_info()
         error_message = "{}: {}".format(exc_type.__name__, exc_value)
         traceback.print_exc()
-        await koduck_instance.send_message(message, content=settings.message_something_broke + "\n``{}``".format(error_message))
+        await koduck_instance.send_message(message, content=settings.message_something_broke + "\n``{}``".format(error_message), ignore_cd=True)
         koduck_instance.log(type="command_error", extra=settings.message_unhandled_error.format(error_message))

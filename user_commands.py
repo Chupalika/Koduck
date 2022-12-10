@@ -210,4 +210,4 @@ async def request_roles(context, *args, **kwargs):
 async def ping(interaction, delay: int):
     await interaction.response.defer(thinking=True)
     await asyncio.sleep(delay)
-    await interaction.followup.send(content="pong")
+    await interaction.command.koduck.send_message(receive_message=interaction, content="pong")
