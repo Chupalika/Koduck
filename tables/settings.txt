@@ -29,6 +29,7 @@ message_add_response_success	Added a custom response: '{}' -> '{}'
 message_add_response_failed	That trigger message already has a custom response message	
 message_remove_response_success	Removed a custom response	
 message_remove_response_failed	'{}' doesn't seem to have a corresponding custom response	
+message_change_nickname_failed	Cannot change nickname outside of a server	
 message_add_requestable_roles_no_role	I need a role to add	
 message_add_requestable_roles_success	Roles added	
 message_remove_requestable_roles_no_role	I need a role to remove	

@@ -59,7 +59,7 @@ async def add_response(context, trigger, response, *args, **kwargs):
     if result == -1:
         return await context.koduck.send_message(receive_message=context.message, content=settings.message_add_response_failed)
     else:
-        yadon.WriteRowToTable(settings.commands_table_name, trigger, ["admin_commands", "custom_response", "match", "1"])
+        yadon.WriteRowToTable(settings.commands_table_name, trigger, ["user_commands", "custom_response", "match", "1"])
         context.koduck.add_command(trigger, custom_response, "match", 1)
         return await context.koduck.send_message(receive_message=context.message, content=settings.message_add_response_success.format(trigger, response))
 
@@ -71,6 +71,13 @@ async def remove_response(context, trigger, *args, **kwargs):
         yadon.RemoveRowFromTable(settings.commands_table_name, trigger)
         context.koduck.remove_command(trigger)
         return await context.koduck.send_message(receive_message=context.message, content=settings.message_remove_response_success)
+
+async def change_nickname(context, nickname=None, *args, **kwargs):
+    the_guild = context.message.guild
+    if not the_guild:
+        return await context.koduck.send_message(receive_message=context.message, content=settings.message_change_nickname_failed)
+    self_member = the_guild.me
+    return await self_member.edit(nick=nickname)
 
 async def add_requestable_roles(context, *args, **kwargs):
     if not context.message.role_mentions:

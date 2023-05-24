@@ -148,7 +148,7 @@ class Koduck:
             user_level = self.get_user_level(receive_message.author.id)
             if user_level < settings.ignore_cd_level:
                 cooldown_active = self.check_channel_cooldown(send_channel.id)
-            cooldown_active = cooldown_active or self.check_user_cooldown(receive_message.author.id)
+                cooldown_active = cooldown_active or self.check_user_cooldown(receive_message.author.id)
             
             #ignore message if bot is on channel cooldown or user cooldown
             if cooldown_active and not ignore_cd:
@@ -158,14 +158,15 @@ class Koduck:
         #send message to a "/run" interaction
         if isinstance(receive_message, SlashMessage) and channel is None:
             if not receive_message.interaction.response.is_done():
-                #This is not returning the sent message for some reason
                 the_message = await receive_message.interaction.response.send_message(**kwargs)
             else:
                 the_message = await receive_message.interaction.followup.send(**kwargs)
         #send message to an interaction
         elif isinstance(receive_message, discord.Interaction) and channel is None:
+            #This is not returning the sent message for some reason, so here's a workaround to fetch it after it's sent
             if not receive_message.response.is_done():
-                the_message = await receive_message.response.send_message(**kwargs)
+                await receive_message.response.send_message(**kwargs)
+                the_message = await receive_message.original_response()
             else:
                 the_message = await receive_message.followup.send(**kwargs)
         #send message normally

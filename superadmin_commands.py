@@ -27,7 +27,7 @@ async def change_status(context, *args, **kwargs):
 #Updates any manual changes to the settings table
 async def refresh_settings(context, *args, **kwargs):
     context.koduck.refresh_settings()
-    return await context.koduck.send_message(receive_message=context.message.message, content=settings.message_refresh_settings_success)
+    return await context.koduck.send_message(receive_message=context.message, content=settings.message_refresh_settings_success)
 
 #Syncs the slash commands to Discord. This is not done automatically and should be done by running this command if changes were made to the slash commands.
 async def refresh_app_commands(context, *args, **kwargs):

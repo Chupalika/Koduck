@@ -9,6 +9,7 @@ async def custom_response(context, *args, **kwargs):
     if response:
         return await context.koduck.send_message(receive_message=context.message, content=response[0])
 
+#Deletes the last bot output triggered by the user. This information is tracked starting from bot startup, and only when koduck.send_message is used
 async def oops(context, *args, **kwargs):
     try:
         the_message = context.koduck.output_history[context.message.author.id].pop()
@@ -210,4 +211,4 @@ async def request_roles(context, *args, **kwargs):
 async def ping(interaction, delay: int):
     await interaction.response.defer(thinking=True)
     await asyncio.sleep(delay)
-    await interaction.command.koduck.send_message(receive_message=interaction, content="pong")
+    await interaction.command.koduck.send_message(interaction, content="pong")
