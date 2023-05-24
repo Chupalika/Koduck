@@ -6,7 +6,6 @@ log_file = "log.txt"
 debug_log_file_name = "discord.log"
 
 #BOT SETTINGS
-token = ""
 command_prefix = "/"
 param_delim = " "
 default_user_level = 1

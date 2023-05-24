@@ -44,8 +44,9 @@ settings.background_task = background_task
 
 koduck = Koduck()
 koduck.add_command("refreshcommands", refresh_commands, "prefix", 3)
+bot_token = open("token.txt").read()
 if settings.enable_debug_logger:
     log_handler = logging.FileHandler(filename=settings.debug_log_file_name, encoding='utf-8', mode='w')
-    koduck.client.run(settings.token, log_handler=log_handler, log_level=logging.DEBUG)
+    koduck.client.run(bot_token, log_handler=log_handler, log_level=logging.DEBUG)
 else:
-    koduck.client.run(settings.token, log_handler=None)
+    koduck.client.run(bot_token, log_handler=None)

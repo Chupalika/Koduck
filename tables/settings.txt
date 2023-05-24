@@ -1,5 +1,4 @@
 HEADER	Value	Tier
-token	token	
 custom_responses_table_name	tables/custom_responses	
 help_messages_table_name	tables/help_messages	
 requestable_roles_table_name	tables/requestable_roles	
