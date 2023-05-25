@@ -7,8 +7,6 @@ Koduck was originally intended for providing info and stats from game data (henc
 
 More advanced developers may want to check out the discord.py documentation, especially [discord.ext.commands](https://discordpy.readthedocs.io/en/latest/ext/commands/index.html), which is discord.py's own bot framework. However, if you just want something simple that is easy to setup, then Koduck is for you!
 
-**Note**: This version of Koduck is updated to use discord.py v2.0, which is currently in beta and unstable. Please be advised!
-
 ## Background
 For those interested - Originally, I had developed a bot named [KoduckBot](https://github.com/Chupalika/KoduckBot) that provides info from a game (Pokemon Shuffle). After some time it occurred to me that I might want to create a similar bot for other games. The only differences would be the functions that collected and outputted game data. I also wanted to clean up my messy code. So I got the idea to create a general bot with basic functions - this would be the base template - then add functions as needed. After that, the code grew over time as I got more ideas and Discord implemented more features.
 
@@ -24,7 +22,7 @@ For those interested - Originally, I had developed a bot named [KoduckBot](https
   - A `run` command is included which simulates a chat command. This can be useful for unverified bots in over 100 servers, since they cannot read messages without the `message_content` intent. The command is disabled by default - enable it by setting the `enable_run_command` setting to a truthy value
 
 ## Requirements
-- Python 3.10+
+- Python 3.9+
 - discord.py 2.0+
   - install in command prompt with `python -m pip install -U discord.py`
 - a Discord application (create one [here](https://discordapp.com/developers/applications/))
@@ -33,7 +31,7 @@ For those interested - Originally, I had developed a bot named [KoduckBot](https
 
 ## Quick Setup
 - download/clone repository
-- in `tables/settings.txt`, set the token to your bot's token
+- create a `token.txt` with your bot's token as its content
 - in `tables/user_levels.txt`, replace `user_id` with your user id (to find this, right click yourself in Discord and click "Copy ID" - developer mode needs to be enabled for the option to show up)
 - open up a command prompt, change the working directory to the Koduck folder, and run command `python main.py`
 
